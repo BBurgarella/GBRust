@@ -126,18 +126,18 @@ impl CPU{
 impl fmt::Display for CPU {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let header = " Upper Register |  Value  | Lower Register | Value\n===================================================";
-        let af = format!("        A       |  \x1b[94m{:#04X}\x1b[00m   |        F       | \x1b[94m{:#04X}\x1b[00m", self.a(), self.f());
-        let bc = format!("        B       |  \x1b[94m{:#04X}\x1b[00m   |        C       | \x1b[94m{:#04X}\x1b[00m", self.b(), self.c());
-        let de = format!("        D       |  \x1b[94m{:#04X}\x1b[00m   |        E       | \x1b[94m{:#04X}\x1b[00m", self.d(), self.e());
-        let hl = format!("        H       |  \x1b[94m{:#04X}\x1b[00m   |        L       | \x1b[94m{:#04X}\x1b[00m", self.h(), self.l());
+        let af = format!("        A       |  {:#04X}   |        F       | {:#04X}", self.a(), self.f());
+        let bc = format!("        B       |  {:#04X}   |        C       | {:#04X}", self.b(), self.c());
+        let de = format!("        D       |  {:#04X}   |        E       | {:#04X}", self.d(), self.e());
+        let hl = format!("        H       |  {:#04X}   |        L       | {:#04X}", self.h(), self.l());
         let header2 = "===================================================\n     16 bit register      |          Value            \n\
                        ===================================================";
-        let pc = format!("            PC            |          \x1b[94m{:#06X}\x1b[00m", self.register_pc);   
-        let sp = format!("            SP            |          \x1b[94m{:#06X}\x1b[00m", self.register_sp);             
+        let pc = format!("            PC            |          {:#06X}", self.register_pc);   
+        let sp = format!("            SP            |          {:#06X}", self.register_sp);             
         //let flags: String = format!("Zero: {}, Subtract: {}", self.register_af, self.register_af);
         let header3 = "===================================================\n                        Flags  \n\
                        ===================================================";
-      let flags = format!("   Z  |  \x1b[94m{}\x1b[00m  |  S  |  \x1b[94m{}\x1b[00m  |  H  |  \x1b[94m{}\x1b[00m |  C  |  \x1b[94m{}\x1b[00m |",self.zero_flag(), self.subtract_flag(), self.half_carry_flag(), self.carry_flag());
+      let flags = format!("   Z  |  {}  |  S  |  {}  |  H  |  {} |  C  |  {} |",self.zero_flag(), self.subtract_flag(), self.half_carry_flag(), self.carry_flag());
         write!(f, "{}", format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}", header, af, bc, de, hl, header2, pc, sp, header3, flags))
     }
 }
