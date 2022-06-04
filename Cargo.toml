@@ -1,0 +1,24 @@
+[package]
+name = "gbrust"
+version = "0.1.0"
+edition = "2021"
+authors = ["Boris Burgarella"]
+description = "a simple rusty gameboy emulator"
+repository = "TODO"
+readme = "README.md"
+documentation = "TODO"
+keywords = ["Emulation", "Gameboy"]
+license = "MIT"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+
+[dependencies]
+colored = "2"
+
+[build-dependencies]
+colored = "2"
