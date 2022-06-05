@@ -15,7 +15,7 @@ fn _01_ld_bc_u16(){
     test_cpu.mem_set(0x0001, 0xCC);
     test_cpu.mem_set(0x0002, 0xBB);
     let ret = test_cpu.tic(0x01); 
-    assert_eq!(test_cpu.register_bc, 0xCCBB); 
+    assert_eq!(test_cpu.register_bc, 0xBBCC); 
     assert_eq!(test_cpu.b(), 0xBB); 
     assert_eq!(test_cpu.c(), 0xCC); 
     assert!(ret)
@@ -37,5 +37,23 @@ fn _03_inc_bc(){
     test_cpu.register_bc = 0xFFF0;
     let ret = test_cpu.tic(0x03); 
     assert_eq!(test_cpu.register_bc, 0xFFF1); 
+    assert!(ret)
+}
+
+#[test]
+fn _04_inc_b(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_bc = 0xF0F0;
+    let ret = test_cpu.tic(0x04); 
+    assert_eq!(test_cpu.register_bc, 0xF1F0); 
+    assert!(ret)
+}
+
+#[test]
+fn _05_dec_b(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_bc = 0xF2F0;
+    let ret = test_cpu.tic(0x05); 
+    assert_eq!(test_cpu.register_bc, 0xF1F0); 
     assert!(ret)
 }

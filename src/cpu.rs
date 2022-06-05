@@ -173,6 +173,16 @@ impl CPU{
                 self.register_bc += 1;
                 self.register_pc += 1;
             }
+            // INC B
+            0x04 => {
+                self.set_b(self.b() + 1);
+                self.register_pc += 1;
+            }
+            // DEC B
+            0x05 => {
+                self.set_b(self.b() - 1);
+                self.register_pc += 1;
+            }
             _ => {println!("Unknown instruction ! {:#04X}", op_code); return false
             }
         }
