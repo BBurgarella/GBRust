@@ -149,6 +149,7 @@ impl CPU{
     }
 
     // here comes the painfull implementation of all the cases
+    #[allow(dead_code)]
     pub fn tic(&mut self, op_code: u8) -> bool{
         match op_code {
             // nop
@@ -157,8 +158,8 @@ impl CPU{
             }
             // LD BC.u16
             0x01 => {
-                let upper = self.mem_read((self.register_pc + 1) as usize) as u16;
-                let lower = self.mem_read((self.register_pc + 2) as usize) as u16;
+                let upper = self.mem_read((self.register_pc + 2) as usize) as u16;
+                let lower = self.mem_read((self.register_pc + 1) as usize) as u16;
                 self.register_bc = (upper << 8) + lower;
                 self.register_pc += 3;
             }
