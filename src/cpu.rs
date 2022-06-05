@@ -1,29 +1,33 @@
 // Implementation of the GB CPU
+#[macro_use] mod bit_macros;
 use std::fmt;
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use crate::memory::Memory;
 
 pub struct CPU{
-    register_af: u16,
-    register_bc: u16,
-    register_de: u16,
-    register_hl: u16,
-    register_sp: u16,
-    register_pc: u16,
+    pub register_af: u16,
+    pub register_bc: u16,
+    pub register_de: u16,
+    pub register_hl: u16,
+    pub register_sp: u16,
+    pub register_pc: u16,
+    //https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
+    pub mem_ptr: Rc<RefCell<Memory>>,
 }
 
-macro_rules! upper {
-    ($self:tt.$regi: ident) => {
-        (($self.$regi & 0xFF00)>>8) as u8
-    }
-}
-
-macro_rules! lower {
-    ($self:tt.$regi: ident) => {
-        ($self.$regi & 0x00FF) as u8
-    }
-}
 
 // Implementation of basic functions related to the AF register
 impl CPU{
+
+    pub fn mem_read(&self, adress:usize)->u8{
+        return self.mem_ptr.borrow_mut().at(adress)
+    }
+    
+    pub fn mem_set(&mut self, adress:usize, value: u8)->(){
+        self.mem_ptr.borrow_mut().set(adress, value);
+    }
 
     //    ##############################################
     // =============== registers getters =================
@@ -120,7 +124,17 @@ impl CPU{
         self.register_hl = upperpart + (self.register_hl & 0xFF00);
     }
 
+    pub fn set_zero_flag(&mut self, value: bool){
+        let flag: u16 = (value as u16) << 7;
+        self.register_af = flag + (self.register_af & 0xff7f);
+    }
+
+    pub fn set_subtract_flag(&mut self, value: bool){
+        let flag: u16 = (value as u16) << 6;
+        self.register_af = flag + (self.register_af & 0xffbf);
+    }
 }
+
 
 
 impl fmt::Display for CPU {
@@ -147,7 +161,9 @@ impl fmt::Display for CPU {
 impl Default for CPU{
     fn default() -> Self{
         Self {register_af:0x0000, register_bc:0x0000, register_de:0x0000,
-              register_hl:0x0000, register_sp:0xFFFE, register_pc:0x0150}
+              register_hl:0x0000, register_sp:0xFFFE, register_pc:0x0150, mem_ptr: Rc::new(RefCell::new(Memory::default()))}  
     }
 }
 
+#[cfg(test)]
+mod test;
