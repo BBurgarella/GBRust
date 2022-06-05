@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::memory::Memory;
+use crate::gbdisassembler::{CPUInstruction, init_instruction_set};
 
 pub struct CPU{
     pub register_af: u16,
@@ -15,16 +16,19 @@ pub struct CPU{
     pub register_pc: u16,
     //https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
     pub mem_ptr: Rc<RefCell<Memory>>,
+    pub instruction_set: Vec<CPUInstruction>,
 }
 
 
 // Implementation of basic functions related to the AF register
 impl CPU{
 
+    #[allow(dead_code)]
     pub fn mem_read(&self, adress:usize)->u8{
         return self.mem_ptr.borrow_mut().at(adress)
     }
-    
+
+    #[allow(dead_code)]
     pub fn mem_set(&mut self, adress:usize, value: u8)->(){
         self.mem_ptr.borrow_mut().set(adress, value);
     }
@@ -84,55 +88,96 @@ impl CPU{
     //    ##############################################
     // =============== registers setters =================
     //    ##############################################
+    #[allow(dead_code)]
     pub fn set_a(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_af = upperpart + (self.register_af & 0x00FF);
     }
 
+    #[allow(dead_code)]
     pub fn set_f(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_af = upperpart + (self.register_af & 0xFF00);
     }
 
+    #[allow(dead_code)]
     pub fn set_b(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_bc = upperpart + (self.register_bc & 0x00FF);
     }
 
+    #[allow(dead_code)]
     pub fn set_c(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_bc = upperpart + (self.register_bc & 0xFF00);
     }
 
+    #[allow(dead_code)]
     pub fn set_d(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_de = upperpart + (self.register_de & 0x00FF);
     }
 
+    #[allow(dead_code)]
     pub fn set_e(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_de = upperpart + (self.register_de & 0xFF00);
     }
 
+    #[allow(dead_code)]
     pub fn set_h(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_hl = upperpart + (self.register_hl & 0x00FF);
     }
 
+    #[allow(dead_code)]
     pub fn set_l(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_hl = upperpart + (self.register_hl & 0xFF00);
     }
 
+    #[allow(dead_code)]
     pub fn set_zero_flag(&mut self, value: bool){
         let flag: u16 = (value as u16) << 7;
         self.register_af = flag + (self.register_af & 0xff7f);
     }
 
+    #[allow(dead_code)]
     pub fn set_subtract_flag(&mut self, value: bool){
         let flag: u16 = (value as u16) << 6;
         self.register_af = flag + (self.register_af & 0xffbf);
     }
+
+    // here comes the painfull implementation of all the cases
+    pub fn tic(&mut self, op_code: u8) -> bool{
+        match op_code {
+            // nop
+            0x00 => {
+                self.register_pc += 1;
+            }
+            // LD BC.u16
+            0x01 => {
+                let upper = self.mem_read((self.register_pc + 1) as usize) as u16;
+                let lower = self.mem_read((self.register_pc + 2) as usize) as u16;
+                self.register_bc = (upper << 8) + lower;
+                self.register_pc += 3;
+            }
+            // LD (BC), A
+            0x02 => {
+                self.mem_set(self.register_bc as usize, self.a());
+                self.register_pc += 1;
+            }
+            // INC BC
+            0x03 => {
+                self.register_bc += 1;
+                self.register_pc += 1;
+            }
+            _ => {println!("Unknown instruction ! {:#04X}", op_code); return false
+            }
+        }
+        return true;
+    }
+
 }
 
 
@@ -151,7 +196,7 @@ impl fmt::Display for CPU {
         //let flags: String = format!("Zero: {}, Subtract: {}", self.register_af, self.register_af);
         let header3 = "===================================================\n                        Flags  \n\
                        ===================================================";
-      let flags = format!("   Z  |  {}  |  S  |  {}  |  H  |  {} |  C  |  {} |",self.zero_flag(), self.subtract_flag(), self.half_carry_flag(), self.carry_flag());
+        let flags = format!("   Z  |  {}  |  S  |  {}  |  H  |  {} |  C  |  {} |",self.zero_flag(), self.subtract_flag(), self.half_carry_flag(), self.carry_flag());
         write!(f, "{}", format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}", header, af, bc, de, hl, header2, pc, sp, header3, flags))
     }
 }
@@ -161,9 +206,13 @@ impl fmt::Display for CPU {
 impl Default for CPU{
     fn default() -> Self{
         Self {register_af:0x0000, register_bc:0x0000, register_de:0x0000,
-              register_hl:0x0000, register_sp:0xFFFE, register_pc:0x0150, mem_ptr: Rc::new(RefCell::new(Memory::default()))}  
+              register_hl:0x0000, register_sp:0xFFFE, register_pc:0x0150, 
+              mem_ptr: Rc::new(RefCell::new(Memory::default())),
+              instruction_set: init_instruction_set("src/cpu/CPU_Instructions.json")
+            }  
     }
 }
 
 #[cfg(test)]
 mod test;
+mod test_instructions;

@@ -112,3 +112,4 @@ fn l_setter_getter(){
     assert_eq!(test_cpu.h(), 0x00);
     assert_eq!(test_cpu.l(), 0x3F);        
 }
+
