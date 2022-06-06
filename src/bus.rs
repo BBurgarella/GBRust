@@ -24,7 +24,8 @@ pub struct BUS {
 impl BUS {
     pub fn at(&self, adress: usize) -> u8 {
         match adress {
-            1..=0xFF => {
+            
+            0..=0xFF => {
                 if self.io.borrow().at(0xFF50) == 1 {
                     return self.bios.borrow().at(adress)
                 } else {
@@ -85,7 +86,7 @@ impl BUS {
                 self.interrupt_register = data
             }
             _ => {
-                // pass
+                println!("trying to write at illegal adress : {:#04X}", adress)
             }
 
         }

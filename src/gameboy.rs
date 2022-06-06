@@ -38,7 +38,7 @@ impl GameBoy{
         let rom_content = fs::read(romfile);
         let mut pointer: usize = 0;
         for data in rom_content.unwrap() {
-            self.mem_set(pointer, data);
+            self.rom.borrow_mut().set(pointer, data);
             pointer += 1;
             if pointer > 0x8000 {
                 println!("Warning, the game you are loading features memory bank, which are not implemented yet");

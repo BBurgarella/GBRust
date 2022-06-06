@@ -13,15 +13,18 @@ impl Default for Memory {
 
 impl Memory {
     pub fn at(&self, position: usize) -> u8{
-        let local_pos: usize = position - self.offset as usize;
-        let real_position: usize =  ((local_pos & 0xFF00) >> 8) | (local_pos & 0xFF) << 8;
-        return self.data[real_position]
+        let local_position = position - self.offset as usize;
+        //println!("{:#04X}", local_position);
+        //let real_position: usize =  ((local_position & 0xFF00) >> 8) | (local_position & 0xFF) << 8;
+        //println!("{:#04X}", real_position);
+        //println!("{:#04X}", self.offset);
+        return self.data[local_position]
     }
 
     pub fn set(&mut self, position: usize, data: u8) -> (){
-        let local_pos: usize = position as usize;
-        let real_position: usize =  ((local_pos & 0xFF00) >> 8) | (local_pos & 0xFF) << 8;
-        self.data[real_position] = data;
+        let local_position = position - self.offset as usize;
+        //let real_position: usize =  ((position & 0xFF00) >> 8) | (position & 0xFF) << 8;
+        self.data[local_position] = data;
     }
 
     pub fn dump(&self, begin: u16, end: u16) ->() {
