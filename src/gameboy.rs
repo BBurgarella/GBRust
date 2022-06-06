@@ -31,6 +31,23 @@ impl GameBoy{
             }
         }
     }
+
+    #[allow(while_true)]
+    pub fn boot(&mut self, romfile: &str) {
+        self.load_rom(romfile);
+        self.load_rom("src/gameboy/DMG_ROM.bin");
+        self.cpu.register_pc = 0x0000;
+        let mut quit = false;
+
+        while !quit {
+            let cycles = self.cpu.tic();
+            if cycles == 0 {
+                quit = true;
+                println!("\nCPU status: \n{}", self.cpu);
+                self.mem.borrow().dump(self.cpu.register_pc, self.cpu.register_pc + 100);
+            }
+        }
+    }
 }
 
 

@@ -12,10 +12,7 @@ fn main(){
     
     let mut my_gameboy: GameBoy = GameBoy::default();
 
-    my_gameboy.load_rom("src/data/snake.gb");
-
-
-    my_gameboy.mem.borrow().dump(0x0000, 0x0200);
+    my_gameboy.boot("src/data/snake.gb");
 
     let elapsed = now.elapsed();
     println!("\nEnd of main function, total time: {:.2?}", elapsed);

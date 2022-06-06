@@ -22,7 +22,7 @@ impl Memory {
     }
 
     pub fn dump(&self, begin: u16, end: u16) ->() {
-        let mut reader: u16 = begin;
+        let mut reader: u16 = begin - begin%0x10;
         let mut row: u8;
 
         let mut return_string = "\nMemory dump: \n     00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F".to_string();
@@ -31,6 +31,9 @@ impl Memory {
             row = 0;
             let adress_string = format!("{:04X}", &reader);
             let mut data_string: String = format!("{:02X}", self.at(reader as usize));
+            if reader == begin {
+                data_string = format!("{}", data_string.on_bright_green());
+            }
 
             let character: char  = if self.at(reader as usize).is_ascii_alphanumeric(){
                 self.at(reader as usize) as char
@@ -42,7 +45,15 @@ impl Memory {
             row += 1;
 
             while row < 16 {
-                data_string = format!("{} {}", data_string, format!("{:02X}", self.at(reader as usize)));
+                let new_data: String;
+                if reader == begin {
+                    new_data = format!("{}", format!("{:02X}", self.at(reader as usize)).on_bright_green());
+                } else {
+                    new_data = format!("{}", format!("{:02X}", self.at(reader as usize)));
+                }
+
+                data_string = format!("{} {}", data_string, new_data);
+            
                 let character: char  = if self.at(reader as usize).is_ascii_alphanumeric(){
                     self.at(reader as usize) as char
                 } else {

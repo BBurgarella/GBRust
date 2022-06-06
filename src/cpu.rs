@@ -532,6 +532,37 @@ impl CPU{
             0x16 => {
                 cycles = self.ld_u8('d');
             }
+            // RLA
+            0x17 => {
+                let last_bit = self.a() >> 7 != 0;
+                let old_carry = self.carry_flag();
+                self.set_carry_flag(last_bit);
+                self.set_a(((self.a() << 1) & 0b11111111) + old_carry);
+                self.register_pc += 1;
+                cycles = 4;  
+            }
+            // JR i8
+            0x18 => {
+                let mut jump_distance: u16 = self.mem_read((self.register_pc + 1) as usize) as u16;
+                // manual casting to i8
+                if jump_distance > 128 {
+                    jump_distance = 256 - jump_distance;
+                    self.register_pc = self.register_pc - jump_distance;
+                } else {
+                    self.register_pc = self.register_pc + jump_distance;
+                }
+                cycles = 12;
+            }
+            // ADD HL, DE
+            0x19 => {
+                let added_val = self.register_hl as usize + self.register_de as usize;
+                self.set_carry_flag(added_val & 0xF0000 != 0);
+                // source: https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
+                self.set_halfcarry_flag((((self.l() & 0xf) + (self.e() & 0xf)) & 0x10) == 0x10);
+                self.register_hl = (added_val & 0xFFFF) as u16;
+                cycles = 8;
+                self.register_pc += 1;
+            }
             _ => {
                 println!("Unknown instruction ! {:#04X}", op_code);
                 cycles = 0;
