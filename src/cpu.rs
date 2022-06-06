@@ -97,7 +97,6 @@ impl CPU{
     //    ##############################################
     // =============== registers setters =================
     //    ##############################################
-    #[allow(dead_code)]
     pub fn set_a(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_af = upperpart + (self.register_af & 0x00FF);
@@ -109,7 +108,6 @@ impl CPU{
         self.register_af = upperpart + (self.register_af & 0xFF00);
     }
 
-    #[allow(dead_code)]
     pub fn set_b(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_bc = upperpart + (self.register_bc & 0x00FF);
@@ -200,15 +198,41 @@ impl CPU{
             }
             // INC B
             0x04 => {
-                self.set_b(self.b() + 1);
+                let val: usize = 1 + self.b() as usize;
+                self.set_b((val & 0xFF) as u8);
+
+                // flag management
+                self.set_subtract_flag(false);
+                self.set_zero_flag((val & 0xFF) == 0);
+                self.set_halfcarry_flag((val & 0xF00) == 0x100);
+
+                // increment pc and return cycles
                 self.register_pc += 1;
                 cycles = 4;
             }
             // DEC B
             0x05 => {
-                self.set_b(self.b() - 1);
+                let val: isize = -1 + self.b()as isize;
+
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_b(val as u8);
+                    }
+                    false => {
+                        self.set_b((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+
+                    }
+                }
+
+                // flag management
+                self.set_subtract_flag(true);
+                self.set_zero_flag(val == 0);
+
+                // increment pc and return cycles
                 self.register_pc += 1;
-                cycles = 4; 
+                cycles = 4;
             }
             // LD B, u8
             0x06 => {
@@ -254,15 +278,63 @@ impl CPU{
                 self.register_pc += 1;
 
             }
+            // LD A, (BC)
             0x0A => {
                 self.set_a(self.mem_read(self.register_bc as usize));
                 self.register_pc += 1;
                 cycles = 8;
             }
+            // DEC BC
             0x0B => {
                 self.register_bc -= 1;
                 self.register_pc += 1;
                 cycles = 8;                
+            }
+            // INC C
+            0x0C => {
+                let val: usize = 1 + self.c() as usize;
+                self.set_c((val & 0xFF) as u8);
+
+                // flag management
+                self.set_subtract_flag(false);
+                self.set_zero_flag((val & 0xFF) == 0);
+                self.set_halfcarry_flag((val & 0xF00) == 0x100);
+
+                // increment pc and return cycles
+                self.register_pc += 1;
+                cycles = 4;
+            }
+            // DEC C
+            0x0D => {
+                let val: isize = -1 + self.c()as isize;
+
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_c(val as u8);
+                    }
+                    false => {
+                        self.set_c((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+
+                    }
+                }
+                // increment pc and return cycles
+                self.register_pc += 1;
+                cycles = 4;
+            }
+            // LD C, u8
+            0x0E => {
+                self.set_c(self.mem_read((self.register_pc + 1) as usize));
+                self.register_pc += 2;
+                cycles = 8; 
+            }
+            0x0F =>{
+                let first_bit = self.a() & 0x01 != 0;
+                self.set_carry_flag(first_bit);
+                self.set_a(((self.a() >> 1) & 0b11111111) + (self.carry_flag()<< 7));
+                self.register_pc += 1;
+                cycles = 4;          
             }
             _ => {
                 println!("Unknown instruction ! {:#04X}", op_code);
