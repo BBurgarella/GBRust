@@ -11,9 +11,6 @@ fn main(){
     let now = Instant::now();
     
     let mut my_gameboy: GameBoy = GameBoy::default();
-    for i in &my_gameboy.cpu.instruction_set{
-        println!("{}", i);
-    }
 
     my_gameboy.load_rom("src/data/snake.gb");
 

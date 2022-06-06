@@ -42,6 +42,42 @@ impl CPU{
         self.mem_ptr.borrow_mut().set(adress, value);
     }
 
+    // I hope that this function does not take too much time to run
+    pub fn ld_u8(&mut self, reg_ident: char)-> u8{
+        match reg_ident {
+            'a' => {
+                self.set_a(self.mem_read((self.register_pc + 1) as usize));
+            }
+            'f' => {
+                self.set_f(self.mem_read((self.register_pc + 1) as usize));
+            }
+            'b' => {
+                self.set_b(self.mem_read((self.register_pc + 1) as usize));
+            }
+            'c' => {
+                self.set_c(self.mem_read((self.register_pc + 1) as usize));
+            }
+            'd' => {
+                self.set_d(self.mem_read((self.register_pc + 1) as usize));
+            }
+            'e' => {
+                self.set_e(self.mem_read((self.register_pc + 1) as usize));
+            }
+            'h' => {
+                self.set_h(self.mem_read((self.register_pc + 1) as usize));
+            }
+            'l' => {
+                self.set_l(self.mem_read((self.register_pc + 1) as usize));
+            }
+            _ => {
+                return 0
+            }
+        }
+        self.register_pc += 2;
+        let cycles = 8;
+        return cycles
+    }
+
     //    ##############################################
     // =============== registers getters =================
     //    ##############################################
@@ -102,7 +138,6 @@ impl CPU{
         self.register_af = upperpart + (self.register_af & 0x00FF);
     }
 
-    #[allow(dead_code)]
     pub fn set_f(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_af = upperpart + (self.register_af & 0xFF00);
@@ -113,43 +148,36 @@ impl CPU{
         self.register_bc = upperpart + (self.register_bc & 0x00FF);
     }
 
-    #[allow(dead_code)]
     pub fn set_c(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_bc = upperpart + (self.register_bc & 0xFF00);
     }
 
-    #[allow(dead_code)]
     pub fn set_d(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_de = upperpart + (self.register_de & 0x00FF);
     }
 
-    #[allow(dead_code)]
     pub fn set_e(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_de = upperpart + (self.register_de & 0xFF00);
     }
 
-    #[allow(dead_code)]
     pub fn set_h(&mut self, value: u8){
         let upperpart: u16 = (value as u16)<<8;
         self.register_hl = upperpart + (self.register_hl & 0x00FF);
     }
 
-    #[allow(dead_code)]
     pub fn set_l(&mut self, value: u8){
         let upperpart: u16 = value as u16;
         self.register_hl = upperpart + (self.register_hl & 0xFF00);
     }
 
-    #[allow(dead_code)]
     pub fn set_zero_flag(&mut self, value: bool){
         let flag: u16 = (value as u16) << 7;
         self.register_af = flag + (self.register_af & 0xff7f);
     }
 
-    #[allow(dead_code)]
     pub fn set_subtract_flag(&mut self, value: bool){
         let flag: u16 = (value as u16) << 6;
         self.register_af = flag + (self.register_af & 0xffbf);
@@ -171,6 +199,9 @@ impl CPU{
         let cycles: u8;
         let op_code = self.mem_read((self.register_pc) as usize);
         match op_code {
+            // ---------------------------------------------------
+            //                  0x00 to 0x0F
+            // ---------------------------------------------------
             // nop
             0x00 => {
                 self.register_pc += 1;
@@ -236,9 +267,7 @@ impl CPU{
             }
             // LD B, u8
             0x06 => {
-                self.set_b(self.mem_read((self.register_pc + 1) as usize));
-                self.register_pc += 2;
-                cycles = 8; 
+                cycles = self.ld_u8('b');
             }
             // RLCA
             0x07 => {
@@ -325,17 +354,23 @@ impl CPU{
             }
             // LD C, u8
             0x0E => {
-                self.set_c(self.mem_read((self.register_pc + 1) as usize));
-                self.register_pc += 2;
-                cycles = 8; 
+                cycles = self.ld_u8('c');
             }
+            // RRCA
             0x0F =>{
                 let first_bit = self.a() & 0x01 != 0;
                 self.set_carry_flag(first_bit);
+                self.set_zero_flag(false);
+                self.set_subtract_flag(false);
+                self.set_halfcarry_flag(false);
                 self.set_a(((self.a() >> 1) & 0b11111111) + (self.carry_flag()<< 7));
                 self.register_pc += 1;
                 cycles = 4;          
             }
+            
+            // ---------------------------------------------------
+            //                  0x10 to 0x1F
+            // ---------------------------------------------------
             _ => {
                 println!("Unknown instruction ! {:#04X}", op_code);
                 cycles = 0;
@@ -345,8 +380,6 @@ impl CPU{
     }
 
 }
-
-
 
 impl fmt::Display for CPU {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

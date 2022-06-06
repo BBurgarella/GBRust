@@ -13,4 +13,3 @@ macro_rules! lower {
         ($self.$regi & 0x00FF) as u8
     }
 }   
-
