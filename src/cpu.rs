@@ -23,12 +23,21 @@ pub struct CPU{
 // Implementation of basic functions related to the AF register
 impl CPU{
 
+    // as this function is only used to debug I allow dead code
     #[allow(dead_code)]
+    pub fn write_program(&mut self, data: Vec<u8>, start_adress: u16){
+        let mut writer: usize = start_adress as usize;
+        for dat in data {
+            self.mem_set(writer, dat);
+            writer += 1;
+        }
+
+    }
+
     pub fn mem_read(&self, adress:usize)->u8{
         return self.mem_ptr.borrow_mut().at(adress)
     }
 
-    #[allow(dead_code)]
     pub fn mem_set(&mut self, adress:usize, value: u8)->(){
         self.mem_ptr.borrow_mut().set(adress, value);
     }
@@ -150,11 +159,14 @@ impl CPU{
 
     // here comes the painfull implementation of all the cases
     #[allow(dead_code)]
-    pub fn tic(&mut self, op_code: u8) -> bool{
+    pub fn tic(&mut self) -> u8{
+        let cycles: u8;
+        let op_code = self.mem_read((self.register_pc) as usize);
         match op_code {
             // nop
             0x00 => {
                 self.register_pc += 1;
+                cycles = 4;
             }
             // LD BC.u16
             0x01 => {
@@ -162,31 +174,43 @@ impl CPU{
                 let lower = self.mem_read((self.register_pc + 1) as usize) as u16;
                 self.register_bc = (upper << 8) + lower;
                 self.register_pc += 3;
+                cycles = 12;
             }
             // LD (BC), A
             0x02 => {
                 self.mem_set(self.register_bc as usize, self.a());
                 self.register_pc += 1;
+                cycles = 8;
             }
             // INC BC
             0x03 => {
                 self.register_bc += 1;
                 self.register_pc += 1;
+                cycles = 8;
             }
             // INC B
             0x04 => {
                 self.set_b(self.b() + 1);
                 self.register_pc += 1;
+                cycles = 4;
             }
             // DEC B
             0x05 => {
                 self.set_b(self.b() - 1);
                 self.register_pc += 1;
+                cycles = 4; 
             }
-            _ => {println!("Unknown instruction ! {:#04X}", op_code); return false
+            // LD B, u8
+            0x06 => {
+                self.set_b(self.mem_read((self.register_pc + 1) as usize));
+                cycles = 8; 
+            }
+            _ => {
+                println!("Unknown instruction ! {:#04X}", op_code);
+                cycles = 0;
             }
         }
-        return true;
+        return cycles;
     }
 
 }
