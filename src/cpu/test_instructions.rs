@@ -237,6 +237,7 @@ fn _0c_inc_c_carries(){
 fn _0d_dec_c(){
     let mut test_cpu: CPU = CPU::default();
     test_cpu.register_bc = 0xF0F2;
+    assert_eq!(test_cpu.register_bc, 0xF0F2); 
     test_cpu.register_pc = 0x0000;
     test_cpu.write_program(vec!(0x0d), 0x0000);
     let cycles = test_cpu.tic(); 
@@ -284,4 +285,122 @@ fn _0f_rrla(){
     assert_eq!(test_cpu.register_af,  0xAA10); 
     assert_eq!(cycles, 4);
     assert_eq!(test_cpu.register_pc, 0x0001);
+}
+
+#[test]
+fn _10_stop(){
+    // instantiate the CPU
+    let mut test_cpu: CPU = CPU::default();
+    // reset the programm counter
+    test_cpu.register_pc = 0x0000;
+    // write a simple programm: NOP
+    test_cpu.write_program(vec!(0x10), 0x0000);
+    // let the CPU tick
+    let cycles = test_cpu.tic();  
+    // and check that the returned number of cycles is right
+    assert_eq!(cycles, 4);
+    assert!(test_cpu.standbymode);  
+    assert_eq!(test_cpu.register_pc, 0x0001);   
+}
+
+#[test]
+fn _11_ld_de_u16(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x11, 0xEE, 0xDD), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_de, 0xDDEE); 
+    assert_eq!(test_cpu.d(), 0xDD); 
+    assert_eq!(test_cpu.e(), 0xEE); 
+    assert_eq!(cycles, 12);
+    assert_eq!(test_cpu.register_pc, 0x0003);
+}
+
+#[test]
+fn _12_ld_pde_a(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.set_a(0xAA);
+    test_cpu.register_de = 0xDDEE;
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x12), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.mem_read(0xDDEE), 0xAA); 
+    assert_eq!(cycles, 8);
+    assert_eq!(test_cpu.register_pc, 0x0001);
+}
+
+#[test]
+fn _13_inc_de(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_de = 0xFFF0;
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x13), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_de, 0xFFF1); 
+    assert_eq!(cycles, 8);
+    assert_eq!(test_cpu.register_pc, 0x0001);
+}
+
+#[test]
+fn _14_inc_d(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_de = 0xF0F0;
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x14), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_de, 0xF1F0); 
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0x0001);
+}
+
+#[test]
+fn _14_inc_d_carries(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_de = 0xFF00;
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x14), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_de, 0x0000); 
+    assert_eq!(test_cpu.half_carry_flag(), 1);
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0x0001);
+}
+
+#[test]
+fn _15_dec_d(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_de = 0xF2F0;
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x15), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_de, 0xF1F0); 
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0x0001);
+}
+
+#[test]
+fn _15_dec_d_carries(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_de = 0x00F0;
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x15), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_de, 0xFFF0); 
+    assert_eq!(test_cpu.half_carry_flag(), 1);
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0x0001);
+}
+
+#[test]
+fn _16_ld_d_u8(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_de = 0xF1F0;
+    assert_eq!(test_cpu.register_de, 0xF1F0); 
+    test_cpu.register_pc = 0x0000;
+    test_cpu.write_program(vec!(0x16, 0x88), 0x0000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.d(), 0x88);
+    assert_eq!(test_cpu.register_de, 0x88F0); 
+    assert_eq!(cycles, 8);
+    assert_eq!(test_cpu.register_pc, 0x0002);
 }

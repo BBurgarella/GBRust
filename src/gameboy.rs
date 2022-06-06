@@ -42,7 +42,8 @@ impl Default for GameBoy{
             cpu: CPU {register_af:0x0000, register_bc:0x0000, register_de:0x0000,
                 register_hl:0x0000, register_sp:0xFFFE, register_pc:0x0150, 
                 mem_ptr:  Rc::clone(&mem_ptr_init),
-                instruction_set: init_instruction_set("src/cpu/CPU_Instructions.json")
+                instruction_set: init_instruction_set("src/cpu/CPU_Instructions.json"),
+                standbymode: false,
             }
         }
     }

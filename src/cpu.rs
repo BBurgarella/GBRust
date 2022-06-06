@@ -17,6 +17,7 @@ pub struct CPU{
     //https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
     pub mem_ptr: Rc<RefCell<Memory>>,
     pub instruction_set: Vec<CPUInstruction>,
+    pub standbymode: bool,
 }
 
 
@@ -78,6 +79,192 @@ impl CPU{
         return cycles
     }
 
+    pub fn ld_u16(&mut self, reg_ident: &str) -> u8 {
+        let upper = self.mem_read((self.register_pc + 2) as usize) as u16;
+        let lower = self.mem_read((self.register_pc + 1) as usize) as u16;
+        match reg_ident {
+            "BC" => {
+                self.register_bc = (upper << 8) + lower;
+            }
+            "DE" => {
+                self.register_de = (upper << 8) + lower;
+            }
+            "HL" => {
+                self.register_hl = (upper << 8) + lower;
+            }
+            "SP" => {
+                self.register_sp = (upper << 8) + lower;
+            }
+            _ => {
+                return 0
+            }
+        }
+        
+        self.register_pc += 3;
+        let cycles = 12;     
+        return cycles   
+    }
+
+    pub fn inc_8bit(&mut self, reg_ident: char) -> u8 {
+        let val: usize;
+        
+        match reg_ident {
+            'a' => {
+                val = 1 + self.b() as usize;
+                self.set_b((val & 0xFF) as u8);
+            }
+            'b' => {
+                val = 1 + self.b() as usize;
+                self.set_b((val & 0xFF) as u8);
+            }
+            'c' => {
+                val = 1 + self.c() as usize;
+                self.set_c((val & 0xFF) as u8);
+            }
+            'd' => {
+                val = 1 + self.d() as usize;
+                self.set_d((val & 0xFF) as u8);
+            }
+            'e' => {
+                val = 1 + self.e() as usize;
+                self.set_e((val & 0xFF) as u8);
+            }
+            'h' => {
+                val = 1 + self.h() as usize;
+                self.set_h((val & 0xFF) as u8);
+            }
+            'l' => {
+                val = 1 + self.l() as usize;
+                self.set_l((val & 0xFF) as u8);
+            }
+            _ => {
+                return 0
+            }
+        } 
+
+        // flag management
+        self.set_subtract_flag(false);
+        self.set_zero_flag((val & 0xFF) == 0);
+        self.set_halfcarry_flag((val & 0xF00) == 0x100);
+
+        // increment pc and return cycles
+        self.register_pc += 1;
+        let cycles = 4; 
+        return cycles;
+    }
+
+    pub fn dec_8bit(&mut self, reg_ident: char) -> u8 {
+        let val: isize;
+        
+        match reg_ident {
+            'a' => {
+                val = -1 + self.a() as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_a(val as u8);
+                    }
+                    false => {
+                        self.set_a((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+
+                    }
+            }
+            }
+            'b' => {
+                val = -1 + self.b() as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_b(val as u8);
+                    }
+                    false => {
+                        self.set_b((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+
+                }
+            }
+            }
+            'c' => {
+                val = -1 + self.c()as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_c(val as u8);
+                    }
+                    false => {
+                        self.set_c((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+                }
+            }
+            }
+            'd' => {
+                val = -1 + self.d()as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_d(val as u8);
+                    }
+                    false => {
+                        self.set_d((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+                }
+            }
+            }
+            'e' => {
+                val = -1 + self.e()as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_e(val as u8);
+                    }
+                    false => {
+                        self.set_e((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+                }
+            }
+            }
+            'h' => {
+                val = -1 + self.h()as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_h(val as u8);
+                    }
+                    false => {
+                        self.set_h((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+                }
+            }
+            }
+            'l' => {
+                val = -1 + self.l()as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.set_l(val as u8);
+                    }
+                    false => {
+                        self.set_l((0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+                }
+            }
+            }
+            _ => {
+                return 0
+            }
+        }
+
+        // flag management
+        self.set_subtract_flag(true);
+        self.set_zero_flag(val == 0);
+
+        // increment pc and return cycles
+        self.register_pc += 1;
+        let cycles = 4;   
+        return cycles;     
+    }
+
     //    ##############################################
     // =============== registers getters =================
     //    ##############################################
@@ -128,7 +315,6 @@ impl CPU{
     pub fn carry_flag(&self) -> u8{
         return (self.f() & 0b00010000) >> 4;
     }
-
 
     //    ##############################################
     // =============== registers setters =================
@@ -209,11 +395,7 @@ impl CPU{
             }
             // LD BC.u16
             0x01 => {
-                let upper = self.mem_read((self.register_pc + 2) as usize) as u16;
-                let lower = self.mem_read((self.register_pc + 1) as usize) as u16;
-                self.register_bc = (upper << 8) + lower;
-                self.register_pc += 3;
-                cycles = 12;
+                cycles = self.ld_u16("BC");
             }
             // LD (BC), A
             0x02 => {
@@ -229,41 +411,11 @@ impl CPU{
             }
             // INC B
             0x04 => {
-                let val: usize = 1 + self.b() as usize;
-                self.set_b((val & 0xFF) as u8);
-
-                // flag management
-                self.set_subtract_flag(false);
-                self.set_zero_flag((val & 0xFF) == 0);
-                self.set_halfcarry_flag((val & 0xF00) == 0x100);
-
-                // increment pc and return cycles
-                self.register_pc += 1;
-                cycles = 4;
+                cycles = self.inc_8bit('b');
             }
             // DEC B
             0x05 => {
-                let val: isize = -1 + self.b()as isize;
-
-                // need to match case to handle overflow (or is it called underflow here ?)
-                match val>=0 {
-                    true => {
-                        self.set_b(val as u8);
-                    }
-                    false => {
-                        self.set_b((0xFF + (val+1)) as u8);
-                        self.set_halfcarry_flag(true);
-
-                    }
-                }
-
-                // flag management
-                self.set_subtract_flag(true);
-                self.set_zero_flag(val == 0);
-
-                // increment pc and return cycles
-                self.register_pc += 1;
-                cycles = 4;
+                cycles = self.dec_8bit('b');
             }
             // LD B, u8
             0x06 => {
@@ -321,36 +473,11 @@ impl CPU{
             }
             // INC C
             0x0C => {
-                let val: usize = 1 + self.c() as usize;
-                self.set_c((val & 0xFF) as u8);
-
-                // flag management
-                self.set_subtract_flag(false);
-                self.set_zero_flag((val & 0xFF) == 0);
-                self.set_halfcarry_flag((val & 0xF00) == 0x100);
-
-                // increment pc and return cycles
-                self.register_pc += 1;
-                cycles = 4;
+                cycles = self.inc_8bit('c')
             }
             // DEC C
             0x0D => {
-                let val: isize = -1 + self.c()as isize;
-
-                // need to match case to handle overflow (or is it called underflow here ?)
-                match val>=0 {
-                    true => {
-                        self.set_c(val as u8);
-                    }
-                    false => {
-                        self.set_c((0xFF + (val+1)) as u8);
-                        self.set_halfcarry_flag(true);
-
-                    }
-                }
-                // increment pc and return cycles
-                self.register_pc += 1;
-                cycles = 4;
+                cycles = self.dec_8bit('c');
             }
             // LD C, u8
             0x0E => {
@@ -371,6 +498,40 @@ impl CPU{
             // ---------------------------------------------------
             //                  0x10 to 0x1F
             // ---------------------------------------------------
+            // STOP
+            0x10 => {
+                self.standbymode = true;
+                self.register_pc += 1;
+                cycles = 4;
+            }
+            // LD DE, u16
+            0x11 => {
+                cycles = self.ld_u16("DE");
+            }
+            // LD (DE), A
+            0x12 => {
+                self.mem_set(self.register_de as usize, self.a());
+                self.register_pc += 1;
+                cycles = 8;
+            }
+            // INC DE
+            0x13 => {
+                self.register_de += 1;
+                self.register_pc += 1;
+                cycles = 8;                
+            }
+            // INC D
+            0x14 => {
+                cycles = self.inc_8bit('d');
+            }
+            // DEC D
+            0x15 => {
+                cycles = self.dec_8bit('d');
+            }
+            // LD D,u8
+            0x16 => {
+                cycles = self.ld_u8('d');
+            }
             _ => {
                 println!("Unknown instruction ! {:#04X}", op_code);
                 cycles = 0;
@@ -407,7 +568,8 @@ impl Default for CPU{
         Self {register_af:0x0000, register_bc:0x0000, register_de:0x0000,
               register_hl:0x0000, register_sp:0xFFFE, register_pc:0x0150, 
               mem_ptr: Rc::new(RefCell::new(Memory::default())),
-              instruction_set: init_instruction_set("src/cpu/CPU_Instructions.json")
+              instruction_set: init_instruction_set("src/cpu/CPU_Instructions.json"),
+              standbymode: false,
             }  
     }
 }
