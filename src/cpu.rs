@@ -157,6 +157,16 @@ impl CPU{
         self.register_af = flag + (self.register_af & 0xffbf);
     }
 
+    pub fn set_carry_flag(&mut self, value: bool){
+        let flag: u16 = (value as u16) << 4;
+        self.register_af = flag + (self.register_af & 0xffef);
+    }
+
+    pub fn set_halfcarry_flag(&mut self, value: bool){
+        let flag: u16 = (value as u16) << 5;
+        self.register_af = flag + (self.register_af & 0xffdf);
+    }
+
     // here comes the painfull implementation of all the cases
     #[allow(dead_code)]
     pub fn tic(&mut self) -> u8{
@@ -203,7 +213,56 @@ impl CPU{
             // LD B, u8
             0x06 => {
                 self.set_b(self.mem_read((self.register_pc + 1) as usize));
+                self.register_pc += 2;
                 cycles = 8; 
+            }
+            // RLCA
+            0x07 => {
+                let last_bit = self.a() >> 7 != 0;
+                self.set_carry_flag(last_bit);
+                self.set_a(((self.a() << 1) & 0b11111111) + self.carry_flag());
+                self.register_pc += 1;
+                cycles = 4;
+            }
+            // LD, u16, SP
+            0x08 => {
+                // this instruction is fairly complex, first
+                // read the data given by the adress at (low: pc+2, high: pc+1)
+                let mut lower = self.mem_read((self.register_pc + 1) as usize);
+                let mut upper = self.mem_read((self.register_pc + 2) as usize);
+                // then build the adress from the fetched data
+                let adress = ((upper as u16) << 8) + lower as u16;
+                // use this adress to read memory
+                lower = self.mem_read((adress) as usize);
+                upper = self.mem_read((adress + 1) as usize);
+                // build a new adress from this memory
+                let adress =  ((upper as u16) << 8) + lower as u16;
+                // and put it in the stack pointer
+                self.register_sp = adress as u16;
+                // which explains the long cycle
+                cycles = 20;
+                self.register_pc += 3;
+            }
+            // ADD HL, BC
+            0x09 => {
+                let added_val = self.register_hl as usize + self.register_bc as usize;
+                self.set_carry_flag(added_val & 0xF0000 != 0);
+                // source: https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
+                self.set_halfcarry_flag((((self.l() & 0xf) + (self.c() & 0xf)) & 0x10) == 0x10);
+                self.register_hl = (added_val & 0xFFFF) as u16;
+                cycles = 8;
+                self.register_pc += 1;
+
+            }
+            0x0A => {
+                self.set_a(self.mem_read(self.register_bc as usize));
+                self.register_pc += 1;
+                cycles = 8;
+            }
+            0x0B => {
+                self.register_bc -= 1;
+                self.register_pc += 1;
+                cycles = 8;                
             }
             _ => {
                 println!("Unknown instruction ! {:#04X}", op_code);
