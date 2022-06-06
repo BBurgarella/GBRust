@@ -2,16 +2,16 @@
 use super::*;
 
 #[test]
-fn test_write_programm(){
+fn test_write_program(){
     // instantiate the CPU
     let mut test_cpu: CPU = CPU::default();
     // Write a simple programm just to check that it works
-    test_cpu.write_program(vec!(0xFF, 0x11, 0x22), 0x0000);
+    test_cpu.write_program(vec!(0xFF, 0x11, 0x22), 0xC000);
 
     // check that the values written in RAM are right
-    assert_eq!(test_cpu.mem_read(0x0000), 0xFF);
-    assert_eq!(test_cpu.mem_read(0x0001), 0x11);
-    assert_eq!(test_cpu.mem_read(0x0002), 0x22);
+    assert_eq!(test_cpu.mem_read(0xC000), 0xFF);
+    assert_eq!(test_cpu.mem_read(0xC001), 0x11);
+    assert_eq!(test_cpu.mem_read(0xC002), 0x22);
 }
 
 #[test]
@@ -32,27 +32,27 @@ fn _00_nop0(){
 #[test]
 fn _01_ld_bc_u16(){
     let mut test_cpu: CPU = CPU::default();
-    test_cpu.register_pc = 0x0000;
-    test_cpu.write_program(vec!(0x01, 0xCC, 0xBB), 0x0000);
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x01, 0xCC, 0xBB), 0xC000);
     let cycles = test_cpu.tic(); 
     assert_eq!(test_cpu.register_bc, 0xBBCC); 
     assert_eq!(test_cpu.b(), 0xBB); 
     assert_eq!(test_cpu.c(), 0xCC); 
     assert_eq!(cycles, 12);
-    assert_eq!(test_cpu.register_pc, 0x0003);
+    assert_eq!(test_cpu.register_pc, 0xC003);
 }
 
 #[test]
 fn _02_ld_pbc_a(){
     let mut test_cpu: CPU = CPU::default();
     test_cpu.set_a(0xAA);
-    test_cpu.register_bc = 0xBBCC;
-    test_cpu.register_pc = 0x0000;
-    test_cpu.write_program(vec!(0x02), 0x0000);
+    test_cpu.register_bc = 0xCBCC;
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x02), 0xC000);
     let cycles = test_cpu.tic(); 
-    assert_eq!(test_cpu.mem_read(0xBBCC), 0xAA); 
+    assert_eq!(test_cpu.mem_read(0xCBCC), 0xAA); 
     assert_eq!(cycles, 8);
-    assert_eq!(test_cpu.register_pc, 0x0001);
+    assert_eq!(test_cpu.register_pc, 0xC001);
 }
 
 #[test]

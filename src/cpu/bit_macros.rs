@@ -1,6 +1,5 @@
 // All the operations related to bits
 
-
 #[macro_export]
 macro_rules! upper {
     ($self:tt.$regi: ident) => {

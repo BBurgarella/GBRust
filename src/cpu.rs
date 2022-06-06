@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::memory::Memory;
+use crate::bus::BUS;
 use crate::gbdisassembler::{CPUInstruction, init_instruction_set};
 
 pub struct CPU{
@@ -15,7 +16,7 @@ pub struct CPU{
     pub register_sp: u16,
     pub register_pc: u16,
     //https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
-    pub mem_ptr: Rc<RefCell<Memory>>,
+    pub mem_ptr: Rc<RefCell<BUS>>,
     pub instruction_set: Vec<CPUInstruction>,
     pub standbymode: bool,
 }
@@ -36,7 +37,7 @@ impl CPU{
     }
 
     pub fn mem_read(&self, adress:usize)->u8{
-        return self.mem_ptr.borrow_mut().at(adress)
+        return self.mem_ptr.borrow().at(adress)
     }
 
     pub fn mem_set(&mut self, adress:usize, value: u8)->(){
@@ -596,9 +597,35 @@ impl fmt::Display for CPU {
 // except for the stack pointer SP and the program counter PC
 impl Default for CPU{
     fn default() -> Self{
+
+        // bios
+        let bios_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0xFF], offset: 0x0000}));
+        // rom
+        let rom_ptr  = Rc::new(RefCell::new(Memory {data: vec![0; 0x8000], offset: 0x0000}));
+        // vram
+        let vram_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0x2000], offset: 0x8000}));
+        // vram
+        let wram_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0x2000], offset: 0xC000}));
+        // oam
+        let oam_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0x1E00], offset: 0xFE00}));
+        // I/O
+        let io_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0x80], offset: 0xFF00}));
+        // High ram
+        let hram_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0x7f], offset: 0xFF80}));
+
+        let bus_ptr =  Rc::new(RefCell::new(BUS {
+            bios: Rc::clone(&bios_ptr),
+            rom: Rc::clone(&rom_ptr),
+            vram: Rc::clone(&vram_ptr),
+            wram: Rc::clone(&wram_ptr),
+            oam: Rc::clone(&oam_ptr),
+            io: Rc::clone(&io_ptr),
+            hram: Rc::clone(&hram_ptr),
+            interrupt_register: 0}));
+
         Self {register_af:0x0000, register_bc:0x0000, register_de:0x0000,
               register_hl:0x0000, register_sp:0xFFFE, register_pc:0x0150, 
-              mem_ptr: Rc::new(RefCell::new(Memory::default())),
+              mem_ptr: Rc::clone(&bus_ptr),
               instruction_set: init_instruction_set("src/cpu/CPU_Instructions.json"),
               standbymode: false,
             }  

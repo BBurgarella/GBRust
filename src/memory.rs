@@ -1,23 +1,26 @@
 use colored::*;
 pub struct Memory {
-    pub data: [u8; 0xFFFF]
+    pub data: Vec<u8>,
+    pub offset: u16,
 }
 
 impl Default for Memory {
     fn default() -> Self {
-        let array: [u8; 0xFFFF] = [0; 0xFFFF];
-        Self {data: array}
+        let array =vec![0; 0xFFFF];
+        Self {data: array, offset: 0x0000}
     }
 }
 
 impl Memory {
     pub fn at(&self, position: usize) -> u8{
-        let real_position: usize =  ((position & 0xFF00) >> 8) | (position & 0xFF) << 8;
+        let local_pos: usize = position - self.offset as usize;
+        let real_position: usize =  ((local_pos & 0xFF00) >> 8) | (local_pos & 0xFF) << 8;
         return self.data[real_position]
     }
 
     pub fn set(&mut self, position: usize, data: u8) -> (){
-        let real_position: usize =  ((position & 0xFF00) >> 8) | (position & 0xFF) << 8;
+        let local_pos: usize = position as usize;
+        let real_position: usize =  ((local_pos & 0xFF00) >> 8) | (local_pos & 0xFF) << 8;
         self.data[real_position] = data;
     }
 

@@ -2,6 +2,7 @@
 mod cpu;
 mod memory;
 mod gameboy;
+mod bus;
 mod gbdisassembler;
 use std::time::Instant;
 
