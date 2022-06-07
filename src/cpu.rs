@@ -824,6 +824,9 @@ impl Default for CPU{
 
 #[cfg(test)]
 mod test;
-mod test_instruction_0;
-mod test_instruction_1;
-mod test_instruction_4;
+// instructions from 0x00 to 0x0F
+mod test_0;
+// instructions from 0x10 to 0x1F
+mod test_1;
+// instructions from 0x40 to 0x4F
+mod test_4;
