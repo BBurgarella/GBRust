@@ -30,6 +30,7 @@ impl GameBoy{
         return self.bus.borrow_mut().at(adress)
     }
 
+    #[allow(dead_code)]
     pub fn mem_set(&mut self, adress:usize, value: u8)->(){
         self.bus.borrow_mut().set(adress, value);
     }
