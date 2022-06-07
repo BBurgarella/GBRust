@@ -823,10 +823,10 @@ impl Default for CPU{
 }
 
 #[cfg(test)]
-mod test;
+mod registers;
 // instructions from 0x00 to 0x0F
-mod test_0;
+mod instructions_0;
 // instructions from 0x10 to 0x1F
-mod test_1;
+mod instructions_1;
 // instructions from 0x40 to 0x4F
-mod test_4;
+mod instructions_4;
