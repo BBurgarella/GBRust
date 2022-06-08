@@ -659,6 +659,9 @@ impl CPU{
                 let first_bit = self.a() & 0b1 != 0;
                 let old_carry = self.carry_flag();
                 self.set_carry_flag(first_bit);
+                self.set_halfcarry_flag(false);
+                self.set_subtract_flag(false);
+                self.set_zero_flag(self.a() != 0);
                 self.set_a((self.a() >> 1) + (old_carry << 7));
                 self.register_pc += 1;
                 cycles = 4;       
@@ -666,7 +669,27 @@ impl CPU{
             // ---------------------------------------------------
             //                  0x20 to 0x2F
             // ---------------------------------------------------
-            
+            // JR, ZZ, i8
+            0x20 => {
+                if self.zero_flag() == 0 {
+                    let mut jump_distance: u16 = self.mem_read((self.register_pc + 1) as usize) as u16;
+                    // manual casting to i8
+                    if jump_distance > 128 {
+                        jump_distance = 256 - jump_distance;
+                        self.register_pc = self.register_pc - jump_distance;
+                    } else {
+                        self.register_pc = self.register_pc + jump_distance;
+                    }
+                    cycles = 12;
+                } else {
+                    cycles = 8;
+                    self.register_pc += 2;
+                }
+            }
+            // LD, HL, u16
+            0x21 => {
+                cycles = self.ld_u16("HL");
+            }
             
             // ---------------------------------------------------
             //                  0x30 to 0x3F
@@ -836,5 +859,7 @@ mod registers;
 mod instructions_0;
 // instructions from 0x10 to 0x1F
 mod instructions_1;
+// instructions from 0x20 to 0x2F
+mod instructions_2;
 // instructions from 0x40 to 0x4F
 mod instructions_4;
