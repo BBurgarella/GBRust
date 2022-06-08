@@ -263,3 +263,18 @@ fn _1e_ld_e_u8(){
     assert_eq!(cycles, 8);
     assert_eq!(test_cpu.register_pc, 0xC002);
 }
+
+
+#[test]
+fn _1f_rra(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.set_a(0b0101);
+    test_cpu.set_carry_flag(true);
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x1F), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.a(), 0x82);
+    assert_eq!(test_cpu.register_af, 0x8210); 
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0xC001);
+}

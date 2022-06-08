@@ -654,7 +654,15 @@ impl CPU{
                 self.ld_u8('e');
                 cycles = 8;
             }
-            
+            // RRA
+            0x1F => {
+                let first_bit = self.a() & 0b1 != 0;
+                let old_carry = self.carry_flag();
+                self.set_carry_flag(first_bit);
+                self.set_a((self.a() >> 1) + (old_carry << 7));
+                self.register_pc += 1;
+                cycles = 4;       
+            }
             // ---------------------------------------------------
             //                  0x20 to 0x2F
             // ---------------------------------------------------
