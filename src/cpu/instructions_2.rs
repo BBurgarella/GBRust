@@ -128,3 +128,50 @@ fn _26_ld_h_u8(){
     assert_eq!(cycles, 8);
     assert_eq!(test_cpu.register_pc, 0xC002);
 }
+
+#[test]
+fn _27_daa_halfcarry(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.set_b(0b00011001);
+    test_cpu.set_c(0b00101000);
+    test_cpu.register_pc = 0xC000;
+    test_cpu.set_a((test_cpu.b() + test_cpu.c()) & 0xff);
+    test_cpu.set_halfcarry_flag(true);
+    test_cpu.write_program(vec!(0x27), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.a(), 0b01000111);
+    assert_eq!(cycles, 4);
+}
+
+#[test]
+fn _27_daa_carry(){
+    let mut test_cpu: CPU = CPU::default();
+    // 91
+    test_cpu.set_b(0b10010001);
+    // + 82 = 173 (AD)
+    test_cpu.set_c(0b10000010);
+    test_cpu.register_pc = 0xC000;
+    test_cpu.set_a((test_cpu.b() as u16 + test_cpu.c() as u16) as u8 & 0xff);
+    test_cpu.set_carry_flag(true);
+    test_cpu.write_program(vec!(0x27), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.a(), 0b01110011);
+    assert_eq!(test_cpu.carry_flag(), 1);
+    assert_eq!(cycles, 4);
+}
+
+#[test]
+fn _27_daa(){
+    let mut test_cpu: CPU = CPU::default();
+    // 47
+    test_cpu.set_b(0b01000111);
+    // + 14 = 61 (AD)
+    test_cpu.set_c(0b00010100);
+    test_cpu.register_pc = 0xC000;
+    test_cpu.set_a((test_cpu.b() as u16 + test_cpu.c() as u16) as u8 & 0xff);
+    test_cpu.set_carry_flag(false);
+    test_cpu.write_program(vec!(0x27), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.a(), 0b01100001);
+    assert_eq!(cycles, 4);
+}

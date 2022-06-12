@@ -718,6 +718,25 @@ impl CPU{
                 self.ld_u8('h');
                 cycles = 8;
             }
+            0x27 => {
+                let mut correction: u16 = 0;
+                let value = self.a();
+                // lower nibble
+                if (self.half_carry_flag() != 0) || (value & 0xf) > 9 {
+                    correction += 0x6;
+                } 
+                if (self.carry_flag() != 0) || ((value & 0xf0)>> 4) > 9 {
+                    correction += 0x60;
+                }
+                let corrected_value = value as u16 + correction;
+                self.set_a((corrected_value & 0xff) as u8);
+
+                // flags
+                self.set_subtract_flag(false);
+                self.set_zero_flag((corrected_value & 0xFF) == 0);
+                self.set_halfcarry_flag((corrected_value & 0xF00) == 0x100);
+                cycles = 4;
+            }
             
             // ---------------------------------------------------
             //                  0x30 to 0x3F
