@@ -718,6 +718,7 @@ impl CPU{
                 self.ld_u8('h');
                 cycles = 8;
             }
+            // DAA
             0x27 => {
                 let mut correction: u16 = 0;
                 let value = self.a();
@@ -725,6 +726,7 @@ impl CPU{
                 if (self.half_carry_flag() != 0) || (value & 0xf) > 9 {
                     correction += 0x6;
                 } 
+                // higher nibble
                 if (self.carry_flag() != 0) || ((value & 0xf0)>> 4) > 9 {
                     correction += 0x60;
                 }
@@ -737,7 +739,66 @@ impl CPU{
                 self.set_halfcarry_flag((corrected_value & 0xF00) == 0x100);
                 cycles = 4;
             }
-            
+            // JR Z, i8
+            0x28 => {
+                if self.zero_flag() == 1 {
+                    let mut jump_distance: u16 = self.mem_read((self.register_pc + 1) as usize) as u16;
+                    // manual casting to i8
+                    if jump_distance > 128 {
+                        jump_distance = 256 - jump_distance;
+                        self.register_pc = self.register_pc - jump_distance;
+                    } else {
+                        self.register_pc = self.register_pc + jump_distance;
+                    }
+                    cycles = 12;
+                } else {
+                    cycles = 8;
+                    self.register_pc += 2;
+                }
+            }
+            // ADD HL, HL
+            0x29 => {
+                let added_val = self.register_hl as usize + self.register_hl as usize;
+                self.set_carry_flag(added_val & 0xF0000 != 0);
+                // source: https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
+                self.set_halfcarry_flag((((self.l() & 0xf) + (self.l() & 0xf)) & 0x10) == 0x10);
+                self.register_hl = (added_val & 0xFFFF) as u16;
+                cycles = 8;
+                self.register_pc += 1;
+            }
+            // LD A,(HL+)
+            0x2A => {
+                self.set_a(self.mem_read(self.register_hl as usize));
+                self.register_pc += 1;
+                self.register_hl += 1;
+                cycles = 8;    
+            }
+            // DEC HL
+            0x2B => {
+                self.register_hl -= 1;
+                self.register_pc += 1;
+                cycles = 8;   
+            }
+            // INC L
+            0x2C => {
+                cycles = self.inc_8bit('l');
+            }
+            // DEC L
+            0x2D => {
+                cycles = self.dec_8bit('l');
+            }
+            // LD L, u8
+            0x2E => {
+                cycles = self.ld_u8('l');
+            }
+            // CPL
+            0x2F => {
+                self.set_a(self.a()^0xFF);
+                self.set_subtract_flag(false);
+                self.set_halfcarry_flag(false);
+                self.register_pc += 1;
+                cycles = 4;
+            }
             // ---------------------------------------------------
             //                  0x30 to 0x3F
             // ---------------------------------------------------

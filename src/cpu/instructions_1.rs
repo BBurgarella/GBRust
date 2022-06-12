@@ -149,7 +149,7 @@ fn _18_jr_i8(){
 }
 
 #[test]
-fn _19_add_hl_bde(){
+fn _19_add_hl_de(){
     let mut test_cpu: CPU = CPU::default();
     test_cpu.register_hl = 0x0000;
     test_cpu.register_de = 0x0001;
