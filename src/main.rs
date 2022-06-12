@@ -13,7 +13,7 @@ fn main(){
     
     let mut my_gameboy: GameBoy = GameBoy::default();
 
-    my_gameboy.boot("src/Data/Pokemon_red.gb");
+    my_gameboy.boot("src/data/snake.gb");
 
     let elapsed = now.elapsed();
     println!("\nEnd of main function, total time: {:.2?}", elapsed);

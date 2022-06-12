@@ -268,27 +268,40 @@ impl CPU{
 
     pub fn ld_r_r(&mut self, reg_ident1: char, reg_ident2: char) -> u8 {
         let val: u8;
+        let mut cycles: u8;
         match reg_ident2 {
             'a' => {
                 val = self.a();
+                cycles = 4;
             }
             'b' => {
                 val = self.b();
+                cycles = 4;
             }
             'c' => {
                 val = self.c();
+                cycles = 4;
             }
             'd' => {
                 val = self.d();
+                cycles = 4;
             }
             'e' => {
                 val = self.e();
+                cycles = 4;
             }
             'h' => {
                 val = self.h();
+                cycles = 4;
             }
             'l' => {
                 val = self.l();
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                val = self.mem_read(self.register_hl as usize);
+                cycles = 8;
             }
             _ => {
                 println!("Invalid register name: {}", reg_ident1);
@@ -317,13 +330,16 @@ impl CPU{
             'l' => {
                 self.set_l(val);
             }
+            'p' => {
+                self.mem_set(self.register_hl as usize, val);
+                cycles = 8;
+            }
             _ => {
                 println!("Invalid register name: {}", reg_ident2);
                 return 0
             }
         }
         // return the number of cycles
-        let cycles = 4;
         self.register_pc += 1;
         return cycles;
     }
@@ -802,8 +818,57 @@ impl CPU{
             // ---------------------------------------------------
             //                  0x30 to 0x3F
             // ---------------------------------------------------
-           
-            
+            // JR, NC, i8
+            0x30 => {
+                if self.carry_flag() == 0 {
+                    let mut jump_distance: u16 = self.mem_read((self.register_pc + 1) as usize) as u16;
+                    // manual casting to i8
+                    if jump_distance > 128 {
+                        jump_distance = 256 - jump_distance;
+                        self.register_pc = self.register_pc - jump_distance;
+                    } else {
+                        self.register_pc = self.register_pc + jump_distance;
+                    }
+                    cycles = 12;
+                } else {
+                    cycles = 8;
+                    self.register_pc += 2;
+                }
+            }
+            // LD, SP, u16
+            0x31 => {
+                cycles = self.ld_u16("SP");
+            }
+            // LDD HL, A
+            0x32 => {
+                self.mem_set(self.register_hl as usize, self.a());
+                self.register_pc += 1;
+                self.register_hl -= 1;
+                cycles = 8;    
+            }
+            // INC SP
+            0x33 => {
+                self.register_sp += 1;
+                self.register_pc += 1;
+                cycles = 8;                
+            }
+            // INC (HL)
+            0x34 => {
+                let val: usize;
+                let adress = self.register_hl as usize;
+                val = 1 + self.mem_read(adress) as usize;
+                self.mem_set(adress, (val & 0xFF) as u8);
+        
+                // flag management
+                self.set_subtract_flag(false);
+                self.set_zero_flag((val & 0xFF) == 0);
+                self.set_halfcarry_flag((val & 0xF00) == 0x100);
+        
+                // increment pc and return cycles
+                self.register_pc += 1;
+                let cycles = 4; 
+                return cycles;                
+            }
             // ---------------------------------------------------
             //                  0x40 to 0x4F
             // ---------------------------------------------------
@@ -830,6 +895,46 @@ impl CPU{
             // LD, B, L
             0x45 => {
                 cycles = self.ld_r_r('b', 'l');
+            }
+            // LD, B, (HL)
+            0x46 => {
+                cycles = self.ld_r_r('b', 'p')
+            }
+            // LD, B, A
+            0x47 => {
+                cycles = self.ld_r_r('b', 'a');
+            }
+           // LD, C, B
+            0x48 => {
+            cycles = self.ld_r_r('c', 'b');
+            }
+            // LD, C, C
+            0x49 => {
+                cycles = self.ld_r_r('c', 'c');
+            }
+            // LD, C, D
+            0x4A => {
+                cycles = self.ld_r_r('c', 'd');
+            }
+            // LD, C, E
+            0x4B => {
+                cycles = self.ld_r_r('c', 'e');
+            }
+            // LD, C, H
+            0x4C => {
+                cycles = self.ld_r_r('c', 'h');
+            }
+            // LD, C, L
+            0x4D => {
+                cycles = self.ld_r_r('c', 'l');
+            }
+            // LD, C, (HL)
+            0x4E => {
+                cycles = self.ld_r_r('c', 'p')
+            }
+            // LD, C, A
+            0x4F => {
+                cycles = self.ld_r_r('c', 'a');
             }
             // ---------------------------------------------------
             //                  0x50 to 0x5F
@@ -969,5 +1074,7 @@ mod instructions_0;
 mod instructions_1;
 // instructions from 0x20 to 0x2F
 mod instructions_2;
+// instructions from 0x30 to 0x3F
+mod instructions_3;
 // instructions from 0x40 to 0x4F
 mod instructions_4;
