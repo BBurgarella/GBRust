@@ -661,7 +661,7 @@ impl CPU{
                 self.set_carry_flag(first_bit);
                 self.set_halfcarry_flag(false);
                 self.set_subtract_flag(false);
-                self.set_zero_flag(self.a() != 0);
+                self.set_zero_flag(self.a() == 0);
                 self.set_a((self.a() >> 1) + (old_carry << 7));
                 self.register_pc += 1;
                 cycles = 4;       
@@ -689,6 +689,34 @@ impl CPU{
             // LD, HL, u16
             0x21 => {
                 cycles = self.ld_u16("HL");
+            }
+            // LD (HL+), A
+            0x22 => {
+                self.mem_set(self.register_hl as usize, self.a());
+                self.register_pc += 1;
+                self.register_hl += 1;
+                cycles = 8;               
+            }
+            // INC HL
+            0x23 => {
+                self.register_pc += 1;
+                self.register_hl += 1;
+                cycles = 8;
+            }
+            // INC H
+            0x24 => {
+                self.inc_8bit('h');
+                cycles = 4;
+            }
+            // DEC HL
+            0x25 => {
+                self.dec_8bit('h');
+                cycles = 4;
+            }
+            // LD, H, u8
+            0x26 => {
+                self.ld_u8('h');
+                cycles = 8;
             }
             
             // ---------------------------------------------------

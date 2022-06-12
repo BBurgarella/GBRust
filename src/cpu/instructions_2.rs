@@ -3,7 +3,7 @@ use super::*;
 
 
 // ---------------------------------------------------
-//                  0x10 to 0x1F
+//                  0x20 to 0x2F
 // ---------------------------------------------------
 
 #[test]
@@ -37,4 +37,94 @@ fn _11_ld_hl_u16(){
     assert_eq!(test_cpu.l(), 0xEE); 
     assert_eq!(cycles, 12);
     assert_eq!(test_cpu.register_pc, 0xC003);
+}
+
+#[test]
+fn _22_ldi_hl_a(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_pc = 0xC000;
+    test_cpu.set_a(0xAA);
+    test_cpu.register_hl = 0xC234;
+    test_cpu.write_program(vec!(0x22), 0xC000);
+    let cycles = test_cpu.tic();
+    assert_eq!(test_cpu.mem_read(0xC234), 0xAA);
+    assert_eq!(cycles, 8);
+    assert_eq!(test_cpu.register_pc, 0xC001);
+    assert_eq!(test_cpu.register_hl, 0xC235);
+}
+
+#[test]
+fn _23_inc_hl(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_pc = 0xC000;
+    test_cpu.register_hl = 0x0000;
+    test_cpu.write_program(vec!(0x23), 0xC000);
+    let cycles = test_cpu.tic();
+    assert_eq!(cycles, 8);
+    assert_eq!(test_cpu.register_pc, 0xC001);
+    assert_eq!(test_cpu.register_hl, 0x0001)
+}
+
+#[test]
+fn _24_inc_h(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_hl = 0xF0F0;
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x24), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_hl, 0xF1F0); 
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0xC001);
+}
+
+#[test]
+fn _24_inc_h_carries(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_hl = 0xFF00;
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x24), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_hl, 0x0000); 
+    assert_eq!(test_cpu.half_carry_flag(), 1);
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0xC001);
+}
+
+#[test]
+fn _25_dec_h(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_hl = 0xF2F0;
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x25), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_hl, 0xF1F0); 
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0xC001);
+}
+
+#[test]
+fn _25_dec_h_carries(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_hl = 0x00F0;
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x25), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.register_hl, 0xFFF0); 
+    assert_eq!(test_cpu.half_carry_flag(), 1);
+    assert_eq!(cycles, 4);
+    assert_eq!(test_cpu.register_pc, 0xC001);
+}
+
+#[test]
+fn _26_ld_h_u8(){
+    let mut test_cpu: CPU = CPU::default();
+    test_cpu.register_hl = 0xF1F0;
+    assert_eq!(test_cpu.register_hl, 0xF1F0); 
+    test_cpu.register_pc = 0xC000;
+    test_cpu.write_program(vec!(0x26, 0x88), 0xC000);
+    let cycles = test_cpu.tic(); 
+    assert_eq!(test_cpu.h(), 0x88);
+    assert_eq!(test_cpu.register_hl, 0x88F0); 
+    assert_eq!(cycles, 8);
+    assert_eq!(test_cpu.register_pc, 0xC002);
 }
