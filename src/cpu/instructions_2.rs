@@ -198,7 +198,7 @@ fn _28_jr_z_i8(){
 }
 
 #[test]
-fn _19_add_hl_hl(){
+fn _29_add_hl_hl(){
     let mut test_cpu: CPU = CPU::default();
     test_cpu.register_hl = 0x0002;
     test_cpu.register_pc = 0xC000;
@@ -209,7 +209,7 @@ fn _19_add_hl_hl(){
 }
 
 #[test]
-fn _19_add_hl_de_carries(){
+fn _29_add_hl_hl_carries(){
     let mut test_cpu: CPU = CPU::default();
     test_cpu.register_hl = 0xFFFF;
     test_cpu.register_pc = 0xC000;
@@ -237,7 +237,7 @@ fn _2a_ldi_a_hl(){
 
 
 #[test]
-fn _1b_dec_hl(){
+fn _2b_dec_hl(){
     let mut test_cpu: CPU = CPU::default();
     test_cpu.register_hl = 0xFFF1;
     test_cpu.register_pc = 0xC000;

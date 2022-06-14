@@ -111,8 +111,8 @@ impl CPU{
         
         match reg_ident {
             'a' => {
-                val = 1 + self.b() as usize;
-                self.set_b((val & 0xFF) as u8);
+                val = 1 + self.a() as usize;
+                self.set_a((val & 0xFF) as u8);
             }
             'b' => {
                 val = 1 + self.b() as usize;
@@ -505,6 +505,9 @@ impl CPU{
             0x07 => {
                 let last_bit = self.a() >> 7 != 0;
                 self.set_carry_flag(last_bit);
+                self.set_subtract_flag(false);
+                self.set_halfcarry_flag(false);
+                self.set_zero_flag(false);
                 self.set_a(((self.a() << 1) & 0b11111111) + self.carry_flag());
                 self.register_pc += 1;
                 cycles = 4;
@@ -535,6 +538,7 @@ impl CPU{
                 // source: https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
                 self.set_halfcarry_flag((((self.l() & 0xf) + (self.c() & 0xf)) & 0x10) == 0x10);
                 self.register_hl = (added_val & 0xFFFF) as u16;
+                self.set_subtract_flag(false);
                 cycles = 8;
                 self.register_pc += 1;
 
@@ -617,6 +621,9 @@ impl CPU{
                 let last_bit = self.a() >> 7 != 0;
                 let old_carry = self.carry_flag();
                 self.set_carry_flag(last_bit);
+                self.set_subtract_flag(false);
+                self.set_halfcarry_flag(false);
+                self.set_zero_flag(false);
                 self.set_a(((self.a() << 1) & 0b11111111) + old_carry);
                 self.register_pc += 1;
                 cycles = 4;  
@@ -640,6 +647,7 @@ impl CPU{
                 // source: https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
                 self.set_halfcarry_flag((((self.l() & 0xf) + (self.e() & 0xf)) & 0x10) == 0x10);
                 self.register_hl = (added_val & 0xFFFF) as u16;
+                self.set_subtract_flag(false);
                 cycles = 8;
                 self.register_pc += 1;
             }
@@ -779,6 +787,7 @@ impl CPU{
                 // source: https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
                 self.set_halfcarry_flag((((self.l() & 0xf) + (self.l() & 0xf)) & 0x10) == 0x10);
                 self.register_hl = (added_val & 0xFFFF) as u16;
+                self.set_subtract_flag(false);
                 cycles = 8;
                 self.register_pc += 1;
             }
@@ -866,8 +875,106 @@ impl CPU{
         
                 // increment pc and return cycles
                 self.register_pc += 1;
-                let cycles = 4; 
+                let cycles = 12; 
                 return cycles;                
+            }
+            // DEC HL
+            0x35 => {
+                let val: isize;
+                let adress = self.register_hl as usize;
+                val = -1 + self.mem_read(adress) as isize;
+                // need to match case to handle overflow (or is it called underflow here ?)
+                match val>=0 {
+                    true => {
+                        self.mem_set(adress,val as u8);
+                    }
+                    false => {
+                        self.mem_set(adress, (0xFF + (val+1)) as u8);
+                        self.set_halfcarry_flag(true);
+                    }
+                }
+                // increment pc and return cycles
+                self.register_pc += 1;
+                let cycles = 12; 
+                return cycles;                     
+            }
+            // LD (HL), u8
+            0x36 => {
+                self.mem_set(self.register_hl as usize, self.mem_read((self.register_pc + 1) as usize));
+                let cycles = 12;
+                self.register_pc += 2;
+                return cycles;
+            }
+            // SCF
+            0x37 => {
+                self.set_carry_flag(true);
+                self.set_subtract_flag(false);
+                self.set_halfcarry_flag(false);
+                self.register_pc += 1;
+                let cycles = 4; 
+                return cycles;   
+            }
+            // JR C, i8
+            0x38 => {
+                if self.carry_flag() == 1 {
+                    let mut jump_distance: u16 = self.mem_read((self.register_pc + 1) as usize) as u16;
+                    // manual casting to i8
+                    if jump_distance > 128 {
+                        jump_distance = 256 - jump_distance;
+                        self.register_pc = self.register_pc - jump_distance;
+                    } else {
+                        self.register_pc = self.register_pc + jump_distance;
+                    }
+                    cycles = 12;
+                } else {
+                    cycles = 8;
+                    self.register_pc += 2;
+                }
+            }
+            // ADD HL, SP
+            0x39 => {
+                let added_val = self.register_hl as usize + self.register_sp as usize;
+                self.set_carry_flag(added_val & 0xF0000 != 0);
+                // source: https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
+                self.set_halfcarry_flag((((self.l() & 0xf) + (self.l() & 0xf)) & 0x10) == 0x10);
+                self.set_subtract_flag(false);
+                self.register_hl = (added_val & 0xFFFF) as u16;
+                cycles = 8;
+                self.register_pc += 1;                
+            }
+            // LD, A, HL-
+            0x3A => {
+                self.set_a(self.mem_read(self.register_hl as usize));
+                self.register_pc += 1;
+                self.register_hl -= 1;
+                cycles = 8;
+            }
+            // DEC SP
+            0x3B => {
+                self.register_sp -= 1;
+                self.register_pc += 1;
+                cycles = 8;   
+            }
+            // INC A 
+            0x3C => {
+                cycles = self.inc_8bit('a');
+            }
+            // DEC A 
+            0x3D => {
+                cycles = self.dec_8bit('a');
+            }
+            // LD, A, u8
+            0x3E => {
+                cycles = self.ld_u8('a')
+            }
+            // CCF
+            0x3F => {
+                self.set_carry_flag(self.carry_flag() == 0);
+                self.set_subtract_flag(false);
+                self.set_halfcarry_flag(false);
+                self.register_pc += 1;
+                let cycles = 4; 
+                return cycles;  
             }
             // ---------------------------------------------------
             //                  0x40 to 0x4F
