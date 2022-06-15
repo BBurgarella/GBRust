@@ -344,6 +344,127 @@ impl CPU{
         return cycles;
     }
     
+    pub fn add_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: usize;
+        let cycles: u8;
+        match reg_ident1 {
+            'a' => {
+                val = self.a() as usize + self.a() as usize;
+                self.set_halfcarry_flag((((self.a() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'b' => {
+                val = self.b() as usize + self.a() as usize;
+                self.set_halfcarry_flag((((self.b() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'c' => {
+                val = self.c() as usize + self.a() as usize;
+                self.set_halfcarry_flag((((self.c() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'd' => {
+                val = self.d() as usize + self.a() as usize;
+                self.set_halfcarry_flag((((self.d() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'e' => {
+                val = self.e() as usize + self.a() as usize;
+                self.set_halfcarry_flag((((self.e() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'h' => {
+                val = self.h() as usize + self.a() as usize;
+                self.set_halfcarry_flag((((self.h() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'l' => {
+                val = self.l() as usize + self.a() as usize;
+                self.set_halfcarry_flag((((self.l() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                let hl = self.mem_read(self.register_hl as usize) as usize ;
+                val = hl + self.a() as usize;
+                self.set_halfcarry_flag((((hl as u8 & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+        
+        // return the number of cycles
+        self.set_subtract_flag(false);
+        self.set_zero_flag((val == 0) | ((val & 0x0FF) == 0));
+        self.set_carry_flag((val & 0xF00) != 0x00);
+        self.set_a((val & 0xFF) as u8);
+        self.register_pc += 1;
+        return cycles;
+    }
+
+    pub fn adc_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: usize;
+        let cycles: u8;
+        match reg_ident1 {
+            'a' => {
+                val = self.a() as usize + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((self.a() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'b' => {
+                val = self.b() as usize + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((self.b() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'c' => {
+                val = self.c() as usize + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((self.c() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'd' => {
+                val = self.d() as usize + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((self.d() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'e' => {
+                val = self.e() as usize + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((self.e() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'h' => {
+                val = self.h() as usize + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((self.h() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            'l' => {
+                val = self.l() as usize + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((self.l() & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                let hl = self.mem_read(self.register_hl as usize) as usize ;
+                val = hl + self.a() as usize + self.carry_flag() as usize;
+                self.set_halfcarry_flag((((hl as u8 & 0xf) + (self.a() & 0xf)) & 0x10) == 0x10);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+        
+        // return the number of cycles
+        self.set_subtract_flag(false);
+        self.set_zero_flag((val == 0) | ((val & 0x0FF) == 0));
+        self.set_carry_flag((val & 0xF00) != 0x00);
+        self.set_a((val & 0xFF) as u8);
+        self.register_pc += 1;
+        return cycles;
+    }
 
     //    ##############################################
     // =============== registers getters =================
@@ -1249,14 +1370,73 @@ impl CPU{
                 cycles = self.ld_r_r('a', 'a');
             }            
             
-            
-            
             // ---------------------------------------------------
             //                  0x80 to 0x8F
             // ---------------------------------------------------
-            
-            
-            
+            // ADD A,B
+            0x80 => {
+                cycles = self.add_a_r('b');
+            }
+            // ADD A,C
+            0x81 => {
+                cycles = self.add_a_r('c');
+            }
+            // ADD A,D
+            0x82 => {
+                cycles = self.add_a_r('d');
+            }
+            // ADD A,E
+            0x83 => {
+                cycles = self.add_a_r('e');
+            }
+            // ADD A,H
+            0x84 => {
+                cycles = self.add_a_r('h');
+            }
+            // ADD A,L
+            0x85 => {
+                cycles = self.add_a_r('l');
+            }
+            // ADD A,(HL)
+            0x86 => {
+                cycles = self.add_a_r('p');
+            }
+            // ADD A,A
+            0x87 => {
+                cycles = self.add_a_r('a');
+            }
+            // ADC A,B
+            0x88 => {
+                cycles = self.adc_a_r('b');
+            }
+            // ADC A,C
+            0x89 => {
+                cycles = self.adc_a_r('c');
+            }
+            // ADC A,D
+            0x8A => {
+                cycles = self.adc_a_r('d');
+            }
+            // ADC A,E
+            0x8B => {
+                cycles = self.adc_a_r('e');
+            }
+            // ADC A,H
+            0x8C => {
+                cycles = self.adc_a_r('h');
+            }
+            // ADC A,L
+            0x8D => {
+                cycles = self.adc_a_r('l');
+            }
+            // ADC A,(HL)
+            0x8E => {
+                cycles = self.adc_a_r('p');
+            }
+            // ADD A,A
+            0x8F => {
+                cycles = self.adc_a_r('a');
+            }            
             // ---------------------------------------------------
             //                  0x90 to 0x9F
             // ---------------------------------------------------
@@ -1382,3 +1562,5 @@ mod instructions_5;
 mod instructions_6;
 // instructions from 0x70 to 0x7F
 mod instructions_7;
+// instructions from 0x80 to 0x8F
+mod instructions_8;
