@@ -1114,7 +1114,71 @@ impl CPU{
             // ---------------------------------------------------
             //                  0x60 to 0x6F
             // ---------------------------------------------------
-            
+            // LD, h, B
+            0x60 => {
+                cycles = self.ld_r_r('h', 'b');
+            }
+            // LD, h, C
+            0x61 => {
+                cycles = self.ld_r_r('h', 'c');
+            }
+            // LD, h, D
+            0x62 => {
+                cycles = self.ld_r_r('h', 'd');
+            }
+            // LD, h, E
+            0x63 => {
+                cycles = self.ld_r_r('h', 'e');
+            }
+            // LD, h, H
+            0x64 => {
+                cycles = self.ld_r_r('h', 'h');
+            }
+            // LD, h, L
+            0x65 => {
+                cycles = self.ld_r_r('h', 'l');
+            }
+            // LD, h, (HL)
+            0x66 => {
+                cycles = self.ld_r_r('h', 'p')
+            }
+            // LD, h, A
+            0x67 => {
+                cycles = self.ld_r_r('h', 'a');
+            }
+           // LD, l, B
+            0x68 => {
+            cycles = self.ld_r_r('l', 'b');
+            }
+            // LD, l, C
+            0x69 => {
+                cycles = self.ld_r_r('l', 'c');
+            }
+            // LD, l, D
+            0x6A => {
+                cycles = self.ld_r_r('l', 'd');
+            }
+            // LD, l, E
+            0x6B => {
+                cycles = self.ld_r_r('l', 'e');
+            }
+            // LD, l, H
+            0x6C => {
+                cycles = self.ld_r_r('l', 'h');
+            }
+            // LD, l, L
+            0x6D => {
+                cycles = self.ld_r_r('l', 'l');
+            }
+            // LD, l, (HL)
+            0x6E => {
+                cycles = self.ld_r_r('l', 'p')
+            }
+            // LD, l, A
+            0x6F => {
+                cycles = self.ld_r_r('l', 'a');
+            }            
+                        
             
             
             // ---------------------------------------------------
@@ -1250,3 +1314,5 @@ mod instructions_3;
 mod instructions_4;
 // instructions from 0x50 to 0x5F
 mod instructions_5;
+// instructions from 0x60 to 0x6F
+mod instructions_6;
