@@ -1178,12 +1178,76 @@ impl CPU{
             0x6F => {
                 cycles = self.ld_r_r('l', 'a');
             }            
-                        
-            
-            
+                         
             // ---------------------------------------------------
             //                  0x70 to 0x7F
             // ---------------------------------------------------
+            // LD, (HL), B
+            0x70 => {
+                cycles = self.ld_r_r('p', 'b');
+            }
+            // LD, (HL), C
+            0x71 => {
+                cycles = self.ld_r_r('p', 'c');
+            }
+            // LD, (HL), D
+            0x72 => {
+                cycles = self.ld_r_r('p', 'd');
+            }
+            // LD, (HL), E
+            0x73 => {
+                cycles = self.ld_r_r('p', 'e');
+            }
+            // LD, (HL), H
+            0x74 => {
+                cycles = self.ld_r_r('p', 'h');
+            }
+            // LD, (HL), L
+            0x75 => {
+                cycles = self.ld_r_r('p', 'l');
+            }
+            // LD, (HL), (HL)
+            0x76 => {
+                cycles = 4;
+                self.standbymode = true;
+                self.register_pc += 1;
+            }
+            // LD, (HL), A
+            0x77 => {
+                cycles = self.ld_r_r('p', 'a');
+            }
+           // LD, A, B
+            0x78 => {
+            cycles = self.ld_r_r('a', 'b');
+            }
+            // LD, A, C
+            0x79 => {
+                cycles = self.ld_r_r('a', 'c');
+            }
+            // LD, A, D
+            0x7A => {
+                cycles = self.ld_r_r('a', 'd');
+            }
+            // LD, A, E
+            0x7B => {
+                cycles = self.ld_r_r('a', 'e');
+            }
+            // LD, A, H
+            0x7C => {
+                cycles = self.ld_r_r('a', 'h');
+            }
+            // LD, A, L
+            0x7D => {
+                cycles = self.ld_r_r('a', 'l');
+            }
+            // LD, A, (HL)
+            0x7E => {
+                cycles = self.ld_r_r('a', 'p')
+            }
+            // LD, A, A
+            0x7F => {
+                cycles = self.ld_r_r('a', 'a');
+            }            
             
             
             
@@ -1316,3 +1380,5 @@ mod instructions_4;
 mod instructions_5;
 // instructions from 0x60 to 0x6F
 mod instructions_6;
+// instructions from 0x70 to 0x7F
+mod instructions_7;
