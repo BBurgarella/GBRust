@@ -451,7 +451,7 @@ impl CPU{
 
         if (self.a()) < (to_sub) {
             self.set_carry_flag(true);
-            val = 0xFF - (to_sub - self.a());
+            val = 0xFF - (to_sub - 1 - self.a());
         } else {
             val = self.a() - to_sub;
             self.set_carry_flag(false);
@@ -524,6 +524,68 @@ impl CPU{
         self.set_zero_flag((val == 0) | ((val & 0x0FF) == 0));
         self.set_carry_flag((val & 0xF00) != 0x00);
         self.set_a((val & 0xFF) as u8);
+        self.register_pc += 1;
+        return cycles;
+    }
+
+    pub fn sbc_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: u8;
+        let cycles: u8;
+        let to_sub: u8;
+        match reg_ident1 {
+            'a' => {
+                to_sub = self.a();
+                cycles = 4;
+            }
+            'b' => {
+                to_sub = self.b();
+                cycles = 4;
+            }
+            'c' => {
+                to_sub = self.c();
+                cycles = 4;
+            }
+            'd' => {
+                to_sub = self.d();
+                cycles = 4;
+            }
+            'e' => {
+                to_sub = self.e();
+                cycles = 4;
+            }
+            'h' => {
+                to_sub = self.h();
+                cycles = 4;
+            }
+            'l' => {
+                to_sub = self.l();
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                to_sub = self.mem_read(self.register_hl as usize);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+
+        if (self.a()) < (to_sub + self.carry_flag()) {
+            self.set_carry_flag(true);
+            val = 0xFF - (to_sub - 1 - (self.a() - self.carry_flag()));
+        } else {
+            val = self.a() - (to_sub+self.carry_flag());
+            self.set_carry_flag(false);
+        }
+
+        self.set_halfcarry_flag((self.a() & 0x0f) < ((to_sub+self.carry_flag()) & 0x0f));
+
+        // return the number of cycles
+        self.set_subtract_flag(true);
+        self.set_zero_flag(val == 0);
+        self.set_a(val);
         self.register_pc += 1;
         return cycles;
     }
@@ -1511,31 +1573,63 @@ impl CPU{
             0x91 => {
                 cycles = self.sub_a_r('c');
             }
-            // ADD A,D
+            // SUB A,D
             0x92 => {
                 cycles = self.sub_a_r('d');
             }
-            // ADD A,E
+            // SUB A,E
             0x93 => {
                 cycles = self.sub_a_r('e');
             }
-            // ADD A,H
+            // SUB A,H
             0x94 => {
                 cycles = self.sub_a_r('h');
             }
-            // ADD A,L
+            // SUB A,L
             0x95 => {
                 cycles = self.sub_a_r('l');
             }
-            // ADD A,(HL)
+            // SUB A,(HL)
             0x96 => {
                 cycles = self.sub_a_r('p');
             }
-            // ADD A,A
+            // SUB A,A
             0x97 => {
                 cycles = self.sub_a_r('a');
             }
-            
+            // SBC A,B
+            0x98 => {
+                cycles = self.sbc_a_r('b');
+            }
+            // SBC A,C
+            0x99 => {
+                cycles = self.sbc_a_r('c');
+            }
+            // SBC A,D
+            0x9A => {
+                cycles = self.sbc_a_r('d');
+            }
+            // SBC A,E
+            0x9B => {
+                cycles = self.sbc_a_r('e');
+            }
+            // SBC A,H
+            0x9C => {
+                cycles = self.sbc_a_r('h');
+            }
+            // SBC A,L
+            0x9D => {
+                cycles = self.sbc_a_r('l');
+            }
+            // SBC A,(HL)
+            0x9E => {
+                cycles = self.sbc_a_r('p');
+            }
+            // SBC A,A
+            0x9F => {
+                cycles = self.sbc_a_r('a');
+            }            
+
             // ---------------------------------------------------
             //                  0xA0 to 0xAF
             // ---------------------------------------------------
