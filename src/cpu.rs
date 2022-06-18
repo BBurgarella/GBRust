@@ -2082,3 +2082,5 @@ mod instructions_8;
 mod instructions_9;
 // instructions from 0xA0 to 0xAF
 mod instructions_a;
+// instructions from 0xB0 to 0xBF
+mod instructions_b;
