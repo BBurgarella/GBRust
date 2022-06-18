@@ -405,6 +405,68 @@ impl CPU{
         return cycles;
     }
 
+    pub fn sub_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: u8;
+        let cycles: u8;
+        let to_sub: u8;
+        match reg_ident1 {
+            'a' => {
+                to_sub = self.a();
+                cycles = 4;
+            }
+            'b' => {
+                to_sub = self.b();
+                cycles = 4;
+            }
+            'c' => {
+                to_sub = self.c();
+                cycles = 4;
+            }
+            'd' => {
+                to_sub = self.d();
+                cycles = 4;
+            }
+            'e' => {
+                to_sub = self.e();
+                cycles = 4;
+            }
+            'h' => {
+                to_sub = self.h();
+                cycles = 4;
+            }
+            'l' => {
+                to_sub = self.l();
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                to_sub = self.mem_read(self.register_hl as usize);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+
+        if (self.a()) < (to_sub) {
+            self.set_carry_flag(true);
+            val = 0xFF - (to_sub - self.a());
+        } else {
+            val = self.a() - to_sub;
+            self.set_carry_flag(false);
+        }
+
+        self.set_halfcarry_flag((self.a() & 0x0f) < (to_sub & 0x0f));
+
+        // return the number of cycles
+        self.set_subtract_flag(true);
+        self.set_zero_flag(val == 0);
+        self.set_a(val);
+        self.register_pc += 1;
+        return cycles;
+    }
+
     pub fn adc_a_r(&mut self, reg_ident1: char) -> u8 {
         let val: usize;
         let cycles: u8;
@@ -1441,8 +1503,38 @@ impl CPU{
             // ---------------------------------------------------
             //                  0x90 to 0x9F
             // ---------------------------------------------------
-            
-            
+            // SUB A,B
+            0x90 => {
+                cycles = self.sub_a_r('b');
+            }
+            // SUB A,C
+            0x91 => {
+                cycles = self.sub_a_r('c');
+            }
+            // ADD A,D
+            0x92 => {
+                cycles = self.sub_a_r('d');
+            }
+            // ADD A,E
+            0x93 => {
+                cycles = self.sub_a_r('e');
+            }
+            // ADD A,H
+            0x94 => {
+                cycles = self.sub_a_r('h');
+            }
+            // ADD A,L
+            0x95 => {
+                cycles = self.sub_a_r('l');
+            }
+            // ADD A,(HL)
+            0x96 => {
+                cycles = self.sub_a_r('p');
+            }
+            // ADD A,A
+            0x97 => {
+                cycles = self.sub_a_r('a');
+            }
             
             // ---------------------------------------------------
             //                  0xA0 to 0xAF
@@ -1565,3 +1657,5 @@ mod instructions_6;
 mod instructions_7;
 // instructions from 0x80 to 0x8F
 mod instructions_8;
+// instructions from 0x90 to 0x9F
+mod instructions_9;
