@@ -590,6 +590,107 @@ impl CPU{
         return cycles;
     }
 
+    pub fn and_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: u8;
+        let cycles: u8;
+        match reg_ident1 {
+            'a' => {
+                val = self.a();
+                cycles = 4;
+            }
+            'b' => {
+                val = self.b();
+                cycles = 4;
+            }
+            'c' => {
+                val = self.c();
+                cycles = 4;
+            }
+            'd' => {
+                val = self.d();
+                cycles = 4;
+            }
+            'e' => {
+                val = self.e();
+                cycles = 4;
+            }
+            'h' => {
+                val = self.h();
+                cycles = 4;
+            }
+            'l' => {
+                val = self.l();
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                val = self.mem_read(self.register_hl as usize);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+
+        self.set_a(self.a() & val);
+        self.set_f(0b10100000);
+        self.set_zero_flag(val == 0);
+        self.register_pc += 1;
+        return cycles;
+    }
+
+    pub fn xor_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: u8;
+        let cycles: u8;
+        match reg_ident1 {
+            'a' => {
+                val = self.a();
+                cycles = 4;
+            }
+            'b' => {
+                val = self.b();
+                cycles = 4;
+            }
+            'c' => {
+                val = self.c();
+                cycles = 4;
+            }
+            'd' => {
+                val = self.d();
+                cycles = 4;
+            }
+            'e' => {
+                val = self.e();
+                cycles = 4;
+            }
+            'h' => {
+                val = self.h();
+                cycles = 4;
+            }
+            'l' => {
+                val = self.l();
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                val = self.mem_read(self.register_hl as usize);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+
+        self.set_a(self.a() ^ val);
+        self.set_f(0b00000000);
+        self.set_zero_flag(self.a() == 0);
+        self.register_pc += 1;
+        return cycles;
+    }
+
+
     //    ##############################################
     // =============== registers getters =================
     //    ##############################################
@@ -1633,7 +1734,73 @@ impl CPU{
             // ---------------------------------------------------
             //                  0xA0 to 0xAF
             // ---------------------------------------------------
-            
+            // AND A,B
+            0xA0 => {
+                cycles = self.and_a_r('b');
+            }
+            // AND A,C
+            0xA1 => {
+                cycles = self.and_a_r('c');
+            }
+            // AND A,D
+            0xA2 => {
+                cycles = self.and_a_r('d');
+            }
+            // AND A,E
+            0xA3 => {
+                cycles = self.and_a_r('e');
+            }
+            // AND A,H
+            0xA4 => {
+                cycles = self.and_a_r('h');
+            }
+            // AND A,L
+            0xA5 => {
+                cycles = self.and_a_r('l');
+            }
+            // AND A,(HL)
+            0xA6 => {
+                cycles = self.and_a_r('p');
+            }
+            // AND A,A
+            0xA7 => {
+                cycles = self.and_a_r('a');
+            }
+            // XOR A,B
+            0xA8 => {
+                cycles = self.xor_a_r('b');
+            }
+            // XOR A,C
+            0xA9 => {
+                cycles = self.xor_a_r('c');
+            }
+            // XOR A,D
+            0xAA => {
+                cycles = self.xor_a_r('d');
+            }
+            // XOR A,E
+            0xAB => {
+                cycles = self.xor_a_r('e');
+            }
+            // XOR A,H
+            0xAC => {
+                cycles = self.xor_a_r('h');
+            }
+            // XOR A,L
+            0xAD => {
+                cycles = self.xor_a_r('l');
+            }
+            // XOR A,(HL)
+            0xAE => {
+                cycles = self.xor_a_r('p');
+            }
+            // XOR A,A
+            0xAF => {
+                cycles = self.xor_a_r('a');
+            }
+          
+          
+
             
             
             // ---------------------------------------------------
@@ -1753,3 +1920,5 @@ mod instructions_7;
 mod instructions_8;
 // instructions from 0x90 to 0x9F
 mod instructions_9;
+// instructions from 0xA0 to 0xAF
+mod instructions_a;
