@@ -690,6 +690,106 @@ impl CPU{
         return cycles;
     }
 
+    pub fn or_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: u8;
+        let cycles: u8;
+        match reg_ident1 {
+            'a' => {
+                val = self.a();
+                cycles = 4;
+            }
+            'b' => {
+                val = self.b();
+                cycles = 4;
+            }
+            'c' => {
+                val = self.c();
+                cycles = 4;
+            }
+            'd' => {
+                val = self.d();
+                cycles = 4;
+            }
+            'e' => {
+                val = self.e();
+                cycles = 4;
+            }
+            'h' => {
+                val = self.h();
+                cycles = 4;
+            }
+            'l' => {
+                val = self.l();
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                val = self.mem_read(self.register_hl as usize);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+
+        self.set_a(self.a() | val);
+        self.set_f(0b00000000);
+        self.set_zero_flag(self.a() == 0);
+        self.register_pc += 1;
+        return cycles;
+    }
+
+    pub fn cp_a_r(&mut self, reg_ident1: char) -> u8 {
+        let val: u8;
+        let cycles: u8;
+        match reg_ident1 {
+            'a' => {
+                val = self.a();
+                cycles = 4;
+            }
+            'b' => {
+                val = self.b();
+                cycles = 4;
+            }
+            'c' => {
+                val = self.c();
+                cycles = 4;
+            }
+            'd' => {
+                val = self.d();
+                cycles = 4;
+            }
+            'e' => {
+                val = self.e();
+                cycles = 4;
+            }
+            'h' => {
+                val = self.h();
+                cycles = 4;
+            }
+            'l' => {
+                val = self.l();
+                cycles = 4;
+            }
+            // p for "pointer", (HL) is implied
+            'p' => {
+                val = self.mem_read(self.register_hl as usize);
+                cycles = 8;
+            }
+            _ => {
+                println!("Invalid register name: {}", reg_ident1);
+                return 0
+            }
+        };
+
+        self.set_zero_flag(val == self.a());
+        self.set_subtract_flag(true);
+        self.set_halfcarry_flag((self.a() & 0x0f) < ((val & 0x0f)));
+        self.set_carry_flag(self.a() < val);
+        self.register_pc += 1;
+        return cycles;
+    }
 
     //    ##############################################
     // =============== registers getters =================
@@ -1799,14 +1899,74 @@ impl CPU{
                 cycles = self.xor_a_r('a');
             }
           
-          
-
-            
-            
             // ---------------------------------------------------
             //                  0xB0 to 0xBF
             // ---------------------------------------------------
-            
+            // OR A,B
+            0xB0 => {
+                cycles = self.or_a_r('b');
+            }
+            // OR A,C
+            0xB1 => {
+                cycles = self.or_a_r('c');
+            }
+            // AND A,D
+            0xB2 => {
+                cycles = self.or_a_r('d');
+            }
+            // OR A,E
+            0xB3 => {
+                cycles = self.or_a_r('e');
+            }
+            // OR A,H
+            0xB4 => {
+                cycles = self.or_a_r('h');
+            }
+            // OR A,L
+            0xB5 => {
+                cycles = self.or_a_r('l');
+            }
+            // OR A,(HL)
+            0xB6 => {
+                cycles = self.or_a_r('p');
+            }
+            // OR A,A
+            0xB7 => {
+                cycles = self.or_a_r('a');
+            }
+            // CP A,B
+            0xB8 => {
+                cycles = self.cp_a_r('b');
+            }
+            // CP A,C
+            0xB9 => {
+                cycles = self.cp_a_r('c');
+            }
+            // CP A,D
+            0xBA => {
+                cycles = self.cp_a_r('d');
+            }
+            // CP A,E
+            0xBB => {
+                cycles = self.cp_a_r('e');
+            }
+            // CP A,H
+            0xBC => {
+                cycles = self.cp_a_r('h');
+            }
+            // CP A,L
+            0xBD => {
+                cycles = self.cp_a_r('l');
+            }
+            // CP A,(HL)
+            0xBE => {
+                cycles = self.xor_a_r('p');
+            }
+            // CP A,A
+            0xBF => {
+                cycles = self.xor_a_r('a');
+            }
+                      
             
             
             // ---------------------------------------------------
