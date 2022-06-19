@@ -791,6 +791,105 @@ impl CPU{
         return cycles;
     }
 
+    pub fn ret(&mut self, condition: &str) -> u8 {
+        let cycles: u8;
+        match condition {
+            "NZ" => {
+                if self.zero_flag() == 0 {
+                    // Read from stack
+                    let lower: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+                    let higher: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+                    
+                    // change programm counter accordingly
+                    let adress: u16 = lower + (higher << 8);
+                    self.register_pc = adress;
+                    cycles = 20;
+                } else {
+                    // simply go to the next instruction
+                    cycles = 8;
+                    self.register_pc += 1;
+                }
+
+            }
+            "NC" => {
+                if self.carry_flag() == 0 {
+                    // Read from stack
+                    let lower: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+                    let higher: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+
+                    // change programm counter accordingly
+                    let adress: u16 = lower + (higher << 8);
+                    self.register_pc = adress;
+                    cycles = 20;
+                } else {
+                    // simply go to the next instruction
+                    cycles = 8;
+                    self.register_pc += 1;
+                }
+
+            }
+            "Z" => {
+                if self.zero_flag() == 1 {
+                    // Read from stack
+                    let lower: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+                    let higher: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+                    
+                    // change programm counter accordingly
+                    let adress: u16 = lower + (higher << 8);
+                    self.register_pc = adress;
+                    cycles = 20;
+                } else {
+                    // simply go to the next instruction
+                    cycles = 8;
+                    self.register_pc += 1;
+                }
+
+            }
+            "C" => {
+                if self.carry_flag() == 1 {
+                    // Read from stack
+                    let lower: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+                    let higher: u16 = self.mem_read(self.register_sp as usize) as u16;
+                    self.register_sp += 1;
+
+                    // change programm counter accordingly
+                    let adress: u16 = lower + (higher << 8);
+                    self.register_pc = adress;
+                    cycles = 20;
+                } else {
+                    // simply go to the next instruction
+                    cycles = 8;
+                    self.register_pc += 1;
+                }
+
+            }
+            "None" => {
+                // Read from stack
+                let lower: u16 = self.mem_read(self.register_sp as usize) as u16;
+                self.register_sp += 1;
+                let higher: u16 = self.mem_read(self.register_sp as usize) as u16;
+                self.register_sp += 1;
+
+                // change programm counter accordingly
+                let adress: u16 = lower + (higher << 8);
+                self.register_pc = adress;
+                cycles = 16;
+            }
+            _ => {
+                cycles = 0;
+                println!("Unknown condition used in return function")
+            }
+        }
+        return cycles
+    }
+
     //    ##############################################
     // =============== registers getters =================
     //    ##############################################
@@ -1972,7 +2071,9 @@ impl CPU{
             // ---------------------------------------------------
             //                  0xC0 to 0xCF
             // ---------------------------------------------------
-            
+            0xC0 => {
+                cycles = self.ret("NZ");
+            }
             
             
             // ---------------------------------------------------
@@ -2084,3 +2185,5 @@ mod instructions_9;
 mod instructions_a;
 // instructions from 0xB0 to 0xBF
 mod instructions_b;
+// instructions from 0xC0 to 0xCF
+mod instructions_c;
