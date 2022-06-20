@@ -31,6 +31,7 @@ impl Default for GUI{
         let video_subsystem = sdl_context.video().unwrap();
         let main_window = video_subsystem.window("GBRust", resolution_x, resolution_y)
             .position_centered()
+            .opengl()
             .build()
             .unwrap();
         let main_canvas = main_window.into_canvas().build().unwrap();

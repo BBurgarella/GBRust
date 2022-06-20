@@ -10,8 +10,8 @@ use sdl2::pixels::Color;
 use sdl2::rect::Point;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode; 
-use std::time::Duration;
-
+use std::time::{Duration, Instant};
+use std::io::{self, Write};
 
 pub struct GameBoy {
     // bios
@@ -62,49 +62,62 @@ impl GameBoy{
         self.load_rom(romfile);
         self.load_rom("src/gameboy/DMG_ROM.bin");
         self.cpu.register_pc = 0x0000;
-        let mut quit = false;
 
         self.screen.main_canvas.set_draw_color(Color::RGB(0, 0, 0));
         self.screen.main_canvas.clear();
         self.screen.main_canvas.present();
 
-        while !quit {        
-            let mut i = 0;
-    
-            'running: loop {
-                i = (i + 1) % 255;
-                self.screen.main_canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
-                let mut testpoint: Point = Point::new(400, 300);
-                for j in 0..800 {
-                    testpoint.x = j;
-                    testpoint.y = ((j as f32/800.0)*600.0) as i32;
-                    self.screen.main_canvas.draw_point(testpoint).unwrap();
-                }
-                //canvas.clear();
-                for event in self.screen.event_pump.poll_iter() {
-                    match event {
-                        Event::Quit {..} |
-                        Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                            break 'running
-                        },
-                        _ => {}
-                    }
-                }
-                // The rest of the game loop goes here...
-    
-                let cycles = self.cpu.tic();
+        let mut i: i32 = 0;
+        let mut j: i32 = 0;
 
-                if cycles == 0 {
-                    quit = true;
-                    println!("\nCPU status: \n{}", self.cpu);
-                    self.rom.borrow().dump(self.cpu.register_pc, self.cpu.register_pc + 0x100);
-                    break 'running
-                }
+        let mut pixel_array: [Point; 160 * 144] = [Point::new(0, 0); 160 * 144];
 
-                self.screen.main_canvas.present();
-                ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        for pix in 0..((self.screen.resolution_x*self.screen.resolution_y)-1) {
+            pixel_array[pix as usize].x = i;
+            pixel_array[pix as usize].y = j;
+            
+            i = (i + 1) % self.screen.resolution_x as i32;
+            if i == 0 {
+                j = (j + 1) % self.screen.resolution_y as i32;
             }
         }
+
+        'running: loop {
+
+            let t0 = Instant::now();
+            self.screen.main_canvas.clear();
+            for event in self.screen.event_pump.poll_iter() {
+                match event {
+                    Event::Quit {..} |
+                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                        break 'running
+                    },
+                    _ => {}
+                }
+            }
+            // The rest of the game loop goes here...
+            self.screen.main_canvas.set_draw_color(Color::RGB(0, 64, (255) as u8)); 
+            self.screen.main_canvas.draw_points(&pixel_array[..]).unwrap();
+ 
+            //for pix_id in 1..pixel_array.len() {
+            //    self.screen.main_canvas.draw_point(pixel_array[pix_id]).unwrap();
+            //}
+
+            
+            let cycles = self.cpu.tic();
+
+            if cycles == 0 {
+                //println!("\nCPU status: \n{}", self.cpu);
+                //self.rom.borrow().dump(self.cpu.register_pc, self.cpu.register_pc + 0x100);
+                //break 'running
+            }
+
+            self.screen.main_canvas.present();
+            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 /60));
+            print!("FPS: {}\r", 1e6/t0.elapsed().as_micros() as f32);
+            io::stdout().flush().unwrap();
+        }
+        self.rom.borrow().dump(self.cpu.register_pc, self.cpu.register_pc + 0x100);
     }
 }
 

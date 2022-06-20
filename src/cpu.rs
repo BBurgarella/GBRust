@@ -2092,7 +2092,7 @@ impl CPU{
             //                  0xF0 to 0xFF
             // ---------------------------------------------------
             _ => {
-                println!("Unknown instruction ! {:#04X}", op_code);
+                //println!("Unknown instruction ! {:#04X}", op_code);
                 cycles = 0;
             }
         }
