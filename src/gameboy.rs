@@ -2,9 +2,16 @@ use std::cell::RefCell;
 use std::fs;
 use std::rc::Rc;
 use crate::gbdisassembler::init_instruction_set;
+use crate::gui::GUI;
 use crate::memory::Memory;
 use crate::bus::BUS;
 use crate::cpu::CPU;
+use sdl2::pixels::Color;
+use sdl2::rect::Point;
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode; 
+use std::time::Duration;
+
 
 pub struct GameBoy {
     // bios
@@ -23,6 +30,7 @@ pub struct GameBoy {
     pub hram: Rc<RefCell<Memory>>,
     pub cpu: CPU,
     pub bus: Rc<RefCell<BUS>>,
+    pub screen: GUI,
 }
 impl GameBoy{
     #[allow(dead_code)]
@@ -50,17 +58,51 @@ impl GameBoy{
 
     #[allow(while_true)]
     pub fn boot(&mut self, romfile: &str) {
+
         self.load_rom(romfile);
         self.load_rom("src/gameboy/DMG_ROM.bin");
         self.cpu.register_pc = 0x0000;
         let mut quit = false;
 
-        while !quit {
-            let cycles = self.cpu.tic();
-            if cycles == 0 {
-                quit = true;
-                println!("\nCPU status: \n{}", self.cpu);
-                self.rom.borrow().dump(self.cpu.register_pc, self.cpu.register_pc + 0x100);
+        self.screen.main_canvas.set_draw_color(Color::RGB(0, 0, 0));
+        self.screen.main_canvas.clear();
+        self.screen.main_canvas.present();
+
+        while !quit {        
+            let mut i = 0;
+    
+            'running: loop {
+                i = (i + 1) % 255;
+                self.screen.main_canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
+                let mut testpoint: Point = Point::new(400, 300);
+                for j in 0..800 {
+                    testpoint.x = j;
+                    testpoint.y = ((j as f32/800.0)*600.0) as i32;
+                    self.screen.main_canvas.draw_point(testpoint).unwrap();
+                }
+                //canvas.clear();
+                for event in self.screen.event_pump.poll_iter() {
+                    match event {
+                        Event::Quit {..} |
+                        Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                            break 'running
+                        },
+                        _ => {}
+                    }
+                }
+                // The rest of the game loop goes here...
+    
+                let cycles = self.cpu.tic();
+
+                if cycles == 0 {
+                    quit = true;
+                    println!("\nCPU status: \n{}", self.cpu);
+                    self.rom.borrow().dump(self.cpu.register_pc, self.cpu.register_pc + 0x100);
+                    break 'running
+                }
+
+                self.screen.main_canvas.present();
+                ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
             }
         }
     }
@@ -83,7 +125,7 @@ impl Default for GameBoy{
         let io_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0x80], offset: 0xFF00}));
         // High ram
         let hram_ptr = Rc::new(RefCell::new(Memory {data: vec![0; 0x7f], offset: 0xFF80}));
-
+        // bus
         let bus_ptr =  Rc::new(RefCell::new(BUS {
             bios: Rc::clone(&bios_ptr),
             rom: Rc::clone(&rom_ptr),
@@ -93,6 +135,9 @@ impl Default for GameBoy{
             io: Rc::clone(&io_ptr),
             hram: Rc::clone(&hram_ptr),
             interrupt_register: 0}));
+
+        // screen
+        let screen = GUI::default();
 
         Self {
             bios: Rc::clone(&bios_ptr),
@@ -108,7 +153,8 @@ impl Default for GameBoy{
                 mem_ptr:  Rc::clone(&bus_ptr),
                 instruction_set: init_instruction_set("src/cpu/CPU_Instructions.json"),
                 standbymode: false,
-            }
+            },
+            screen: screen,
         }
     }
 }

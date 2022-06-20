@@ -1,20 +1,14 @@
-// Main file of GBRust
-mod cpu;
-mod memory;
+mod gui;
 mod gameboy;
-mod bus;
 mod gbdisassembler;
-use std::time::Instant;
+mod memory;
+mod cpu;
+mod bus;
 
-use crate::gameboy::GameBoy;
 
-fn main(){
-    let now = Instant::now();
-    
-    let mut my_gameboy: GameBoy = GameBoy::default();
-
-    my_gameboy.boot("src/data/snake.gb");
-
-    let elapsed = now.elapsed();
-    println!("\nEnd of main function, total time: {:.2?}", elapsed);
-}
+use gameboy::GameBoy;
+ 
+pub fn main() {
+    let mut testgb = GameBoy::default();
+    testgb.boot("src/data/snake.gb");
+    }
